@@ -1,7 +1,7 @@
 use rand::Rng;
 use rtdb::tasks::TaskType;
 use rtdb::Task;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -39,6 +39,7 @@ pub fn open_md(file_name: &str) {
         TaskType::FocusAnotherThing => "focus-another-thing",
         TaskType::TakeABreak => "take-a-break",
         TaskType::Tired => "tired",
+        TaskType::Today => "current-work",
     });
     path.push(file_name);
     Command::new("code").arg(path).output();
@@ -64,11 +65,12 @@ pub fn progressing_bar(min: i32, sec: i32, total: i32) -> String {
 pub enum ASCmd {
     AlertFinished,
     AlertFiveMinutes,
+    DialogWithAnswer,
     LockScreen,
 }
 
 impl ASCmd {
-    fn cmd(&self) -> &'static str {
+    fn script(&self) -> &'static str {
         match self {
             ASCmd::AlertFinished => {
                 r#"on run argv
@@ -80,6 +82,12 @@ end run"#
                 r#"on run argv
 	set theDialogText to "There are 5 minutes remaining!"
 	display alert theDialogText
+end run"#
+            }
+            ASCmd::DialogWithAnswer => {
+                r#"on run argv
+	set answer to display dialog "{0}" default answer "{1}"
+	set content to text returned of answer
 end run"#
             }
             ASCmd::LockScreen => {
@@ -95,37 +103,47 @@ end run"#
     }
 }
 
-fn execute_as(cmd: &str) {
+fn script_file(script: &str) -> PathBuf {
     let mut dir = std::env::temp_dir();
     let rnd_name = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
     dir.push(format!("rand-task-{rnd_name}.osas"));
-    let temp_file = fs::File::create(&dir).expect("failed to create temp file");
-    fs::write(&dir, cmd).expect("failed to write to temp file");
-    Command::new("osascript")
-        .arg(dir.to_str().unwrap())
-        .output();
+    fs::File::create(&dir).expect("failed to create temp file");
+    fs::write(&dir, script).expect("failed to write to temp file");
+    dir
 }
 
 pub fn alert(alert_type: ASCmd) -> Command {
-    let mut dir = std::env::temp_dir();
-    let rnd_name = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    dir.push(format!("rand-task-{rnd_name}.osas"));
-    let temp_file = fs::File::create(&dir).expect("failed to create temp file");
-    fs::write(&dir, alert_type.cmd()).expect("failed to write to temp file");
+    let mut dir = script_file(alert_type.script());
     let mut cmd = Command::new("osascript");
     cmd.arg(dir.to_str().unwrap());
     cmd.stdout(Stdio::null());
     cmd
 }
 
+pub fn get_dialog_answer(title: &str, default: &str) -> String {
+    let script = ASCmd::DialogWithAnswer.script().replace("{0}", title);
+    let script = script.replace("{1}", default);
+    let mut dir = script_file(script.as_str());
+    let mut child = Command::new("osascript")
+        .arg(dir.to_str().unwrap())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.wait();
+    let mut stdout = child.stdout.take().unwrap();
+    let mut answer = String::new();
+    stdout.read_to_string(&mut answer);
+    answer
+}
+
 pub fn lock_screen() {
-    execute_as(ASCmd::LockScreen.cmd())
+    let dir = script_file(ASCmd::LockScreen.script());
+    Command::new("osascript")
+        .arg(dir.to_str().unwrap())
+        .output();
 }
 
 pub fn turn_wifi_off() {
@@ -142,7 +160,10 @@ pub async fn send_msg(msg: &str) {
 #[cfg(test)]
 mod test {
     use super::progressing_bar;
+    use crate::cli::util::{get_dialog_answer, lock_screen, turn_wifi_off};
     use std::path::PathBuf;
+    use std::process::Child;
+    use std::thread;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
@@ -159,7 +180,7 @@ mod test {
 
     #[test]
     fn test_script() {
-        let now = SystemTime::now();
-        dbg!(now.duration_since(UNIX_EPOCH).unwrap().as_secs());
+        get_dialog_answer("xx", "");
+        // println!("{}!", );
     }
 }

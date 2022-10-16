@@ -13,6 +13,7 @@ impl LandingPage {
         LandingPage {
             title: "How tired are you now?".to_string(),
             options: vec![
+                "I am going to work hard. 👨‍💻".to_string(),
                 "I want to focus on another thing. 💪️".to_string(),
                 "I need to take a break. 🎧".to_string(),
                 "I am very tired. 🪫".to_string(),
@@ -23,11 +24,13 @@ impl LandingPage {
     pub async fn eval(&self) {
         let c = self.eval_choice();
         let tasks = match c {
-            'a' => focus_another_thing_tasks().await,
-            'b' => take_a_break_tasks().await,
-            'c' => tired_tasks().await,
+            'a' => work_tasks().await,
+            'b' => focus_another_thing_tasks().await,
+            'c' => take_a_break_tasks().await,
+            'd' => tired_tasks().await,
             _ => vec![],
         };
+        // TODO tasks.len == 0
         let task = rand_task(&tasks).unwrap();
         println!("Task: {}", task.name);
 
@@ -47,6 +50,13 @@ impl Page for LandingPage {
     fn options(&self) -> &Vec<String> {
         &self.options
     }
+}
+
+async fn work_tasks() -> Vec<Task> {
+    let db = DB.get().unwrap();
+    task_dao::find_tasks_by_type(db, TaskType::Today)
+        .await
+        .expect("failed to find tasks by TaskType::Today")
 }
 
 async fn focus_another_thing_tasks() -> Vec<Task> {
