@@ -30,7 +30,10 @@ impl LandingPage {
             'd' => tired_tasks().await,
             _ => vec![],
         };
-        // TODO tasks.len == 0
+        if tasks.len() == 0 {
+            println!("You have done all the tasks of this type. ✅");
+            return;
+        }
         let task = rand_task(&tasks).unwrap();
         println!("Task: {}", task.name);
 
