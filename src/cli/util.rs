@@ -1,7 +1,9 @@
+#![allow(dead_code)]
+
 use rand::Rng;
 use rtdb::tasks::TaskType;
 use rtdb::Task;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -42,7 +44,10 @@ pub fn open_md(file_name: &str) {
         TaskType::Today => "current-work",
     });
     path.push(file_name);
-    Command::new("code").arg(path).output();
+    Command::new("code")
+        .arg(path)
+        .output()
+        .expect("failed to execute open_md");
 }
 
 pub fn progressing_bar(min: i32, sec: i32, total: i32) -> String {
@@ -116,7 +121,7 @@ fn script_file(script: &str) -> PathBuf {
 }
 
 pub fn alert(alert_type: ASCmd) -> Command {
-    let mut dir = script_file(alert_type.script());
+    let dir = script_file(alert_type.script());
     let mut cmd = Command::new("osascript");
     cmd.arg(dir.to_str().unwrap());
     cmd.stdout(Stdio::null());
@@ -126,16 +131,18 @@ pub fn alert(alert_type: ASCmd) -> Command {
 pub fn get_dialog_answer(title: &str, default: &str) -> String {
     let script = ASCmd::DialogWithAnswer.script().replace("{0}", title);
     let script = script.replace("{1}", default);
-    let mut dir = script_file(script.as_str());
+    let dir = script_file(script.as_str());
     let mut child = Command::new("osascript")
         .arg(dir.to_str().unwrap())
         .stdout(Stdio::piped())
         .spawn()
         .unwrap();
-    child.wait();
+    child.wait().expect("command osascript wasn't running");
     let mut stdout = child.stdout.take().unwrap();
     let mut answer = String::new();
-    stdout.read_to_string(&mut answer);
+    stdout
+        .read_to_string(&mut answer)
+        .expect("failed to read from child's stdout");
     answer
 }
 
@@ -143,18 +150,20 @@ pub fn lock_screen() {
     let dir = script_file(ASCmd::LockScreen.script());
     Command::new("osascript")
         .arg(dir.to_str().unwrap())
-        .output();
+        .output()
+        .expect("failed to execute lock_screen");
 }
 
 pub fn turn_wifi_off() {
     Command::new("networksetup")
         .args(["-setairportpower", "en0", "off"])
-        .output();
+        .output()
+        .expect("failed to execute turn_wifi_off");
 }
 
 pub async fn send_msg(msg: &str) {
     reqwest::get(format!("http://www.pushplus.plus/send?token=d2410bf17a1547cfadf1b42687279ba2&title={msg}&content={msg}&template=html"))
-        .await;
+        .await.expect("failed to send request to pushplus");
 }
 
 #[cfg(test)]

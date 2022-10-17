@@ -53,5 +53,10 @@ impl Page for ModifyWeightPage {
 async fn modify_weight(weight: i32) {
     let db = DB.get().unwrap();
     let task = crate::TASK.get().unwrap();
-    task_dao::update_weight(db, task, weight).await;
+    match task_dao::update_weight(db, task, weight).await {
+        Ok(_) => {}
+        Err(e) => {
+            println!("{e:?}");
+        }
+    };
 }

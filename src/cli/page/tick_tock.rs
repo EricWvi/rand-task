@@ -38,7 +38,12 @@ impl TickTockPage {
             }
 
             print!("\r{}", util::progressing_bar(min, sec, total));
-            std::io::stdout().flush();
+            match std::io::stdout().flush() {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("{e:?}");
+                }
+            };
             sleep(Duration::from_secs(1));
             if sec > 0 {
                 sec -= 1;

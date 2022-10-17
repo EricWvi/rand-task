@@ -1,10 +1,8 @@
-use crate::cli::page::{FinishTaskPage, ModifyWeightPage, TickTockPage};
+use crate::cli::page::{FinishTaskPage, ModifyWeightPage, ReportUseRatePage, TickTockPage};
 use crate::cli::util;
 use crate::Page;
-use chrono::{NaiveDate, NaiveDateTime};
 use rtdb::{record_dao, DB};
 use std::ops::Sub;
-use std::str::FromStr;
 
 pub struct TimeSpanPage {
     title: String,
@@ -67,6 +65,9 @@ async fn start_task(total: i32) {
     let page = ModifyWeightPage::new();
     page.display();
     page.eval().await;
+    let page = ReportUseRatePage::new();
+    page.display();
+    let use_rate = page.eval();
 
     let end = chrono::Local::now().naive_local();
     println!("{end}");
@@ -77,14 +78,20 @@ async fn start_task(total: i32) {
 
     let db = DB.get().unwrap();
     let task = crate::TASK.get().unwrap();
-    record_dao::add_record(db, task.name.clone(), start, total, min as i32).await;
-}
-
-#[test]
-fn test_time() {
-    let start = NaiveDate::from_ymd(2022, 10, 15).and_hms(9, 29, 38);
-    let end = NaiveDate::from_ymd(2022, 10, 15).and_hms(10, 17, 24);
-    let span = end.sub(start);
-    dbg!(span.num_minutes());
-    dbg!(span.num_seconds() % 60);
+    match record_dao::add_record(
+        db,
+        task.name.clone(),
+        start,
+        total,
+        min as i32,
+        use_rate,
+        task.r#type,
+    )
+    .await
+    {
+        Ok(_) => {}
+        Err(e) => {
+            println!("{e:?}");
+        }
+    }
 }

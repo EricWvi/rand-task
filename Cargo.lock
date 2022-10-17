@@ -1256,7 +1256,7 @@ dependencies = [
 
 [[package]]
 name = "rand-task"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "dotenv",
@@ -1369,7 +1369,7 @@ dependencies = [
 
 [[package]]
 name = "rtctl"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "clap",

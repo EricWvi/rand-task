@@ -1,15 +1,14 @@
-use std::future::Future;
-use std::pin::Pin;
-
 mod finish_task;
 mod landing_page;
 mod modify_weight;
+mod report_use_rate;
 mod tick_tock;
 mod time_span;
 
 pub use finish_task::FinishTaskPage;
 pub use landing_page::LandingPage;
 pub use modify_weight::ModifyWeightPage;
+pub use report_use_rate::ReportUseRatePage;
 pub use tick_tock::TickTockPage;
 pub use time_span::TimeSpanPage;
 
@@ -28,11 +27,10 @@ pub trait Page {
     fn options(&self) -> &Vec<String>;
 
     fn eval_choice(&self) -> char {
-        let mut choice = 'a';
         loop {
             let mut input = String::new();
             match std::io::stdin().read_line(&mut input) {
-                Ok(n) => {
+                Ok(_) => {
                     if input.trim_end().len() != 1 {
                         println!("invalid input");
                         continue;
@@ -41,8 +39,7 @@ pub trait Page {
                         c @ 'a'..='z' => {
                             let i = input.as_bytes()[0] - 'a' as u8;
                             assert!((i as usize) < self.options().len(), "option out of range");
-                            choice = c;
-                            break;
+                            return c;
                         }
                         _ => {
                             println!("invalid input");
@@ -53,6 +50,5 @@ pub trait Page {
                 Err(error) => println!("error: {error}"),
             }
         }
-        choice
     }
 }

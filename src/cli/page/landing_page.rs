@@ -1,7 +1,7 @@
 use super::*;
 use crate::cli::util::rand_task;
 use rtdb::tasks::TaskType;
-use rtdb::{task_dao, tasks, Task, DB};
+use rtdb::{task_dao, Task, DB};
 
 pub struct LandingPage {
     title: String,
@@ -37,7 +37,9 @@ impl LandingPage {
         let task = rand_task(&tasks).unwrap();
         println!("Task: {}", task.name);
 
-        crate::TASK.set(task.clone());
+        crate::TASK
+            .set(task.clone())
+            .expect("failed to set global TASK");
 
         let time_span = TimeSpanPage::new();
         time_span.display();
