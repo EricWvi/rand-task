@@ -3,7 +3,6 @@
 use rand::Rng;
 use rtdb::tasks::TaskType;
 use rtdb::Task;
-use std::io::Read;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -34,17 +33,23 @@ pub fn get_input() -> String {
 }
 
 pub fn open_md(file_name: &str) {
-    let dir = std::env::var("TASK_DIR").expect("TASK_DIR must be set");
-    let mut path = PathBuf::from(dir);
-    let task_type = crate::TASK.get().unwrap().r#type;
-    path.push(match task_type {
-        TaskType::FocusAnotherThing => "focus-another-thing",
-        TaskType::TakeABreak => "take-a-break",
-        TaskType::Tired => "tired",
-        TaskType::Today => "current-work",
-    });
-    path.push(file_name);
-    Command::new("code")
+    let path = if file_name.ends_with("md") {
+        let dir = std::env::var("TASK_DIR").expect("TASK_DIR must be set");
+        let mut path = PathBuf::from(dir);
+        let task_type = crate::TASK.get().unwrap().r#type;
+        path.push(match task_type {
+            TaskType::FocusAnotherThing => "focus-another-thing",
+            TaskType::TakeABreak => "take-a-break",
+            TaskType::Tired => "tired",
+            TaskType::Today => "current-work",
+            TaskType::Inbox => "inbox",
+        });
+        path.push(file_name);
+        path
+    } else {
+        PathBuf::from(file_name)
+    };
+    Command::new("open")
         .arg(path)
         .output()
         .expect("failed to execute open_md");
@@ -70,7 +75,6 @@ pub fn progressing_bar(min: i32, sec: i32, total: i32) -> String {
 pub enum ASCmd {
     AlertFinished,
     AlertFiveMinutes,
-    DialogWithAnswer,
     LockScreen,
 }
 
@@ -87,12 +91,6 @@ end run"#
                 r#"on run argv
 	set theDialogText to "There are 5 minutes remaining!"
 	display alert theDialogText
-end run"#
-            }
-            ASCmd::DialogWithAnswer => {
-                r#"on run argv
-	set answer to display dialog "{0}" default answer "{1}"
-	set content to text returned of answer
 end run"#
             }
             ASCmd::LockScreen => {
@@ -129,21 +127,11 @@ pub fn alert(alert_type: ASCmd) -> Command {
 }
 
 pub fn get_dialog_answer(title: &str, default: &str) -> String {
-    let script = ASCmd::DialogWithAnswer.script().replace("{0}", title);
-    let script = script.replace("{1}", default);
-    let dir = script_file(script.as_str());
-    let mut child = Command::new("osascript")
-        .arg(dir.to_str().unwrap())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-    child.wait().expect("command osascript wasn't running");
-    let mut stdout = child.stdout.take().unwrap();
-    let mut answer = String::new();
-    stdout
-        .read_to_string(&mut answer)
-        .expect("failed to read from child's stdout");
-    answer
+    rtdb::util::get_dialog_answer(title, default)
+}
+
+pub fn eval_choice(choices: i32) -> char {
+    rtdb::util::eval_choice(choices)
 }
 
 pub fn lock_screen() {

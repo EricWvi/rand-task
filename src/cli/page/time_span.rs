@@ -50,7 +50,8 @@ impl Page for TimeSpanPage {
 }
 
 async fn start_task(total: i32) {
-    if let Some(link) = crate::TASK.get().unwrap().md_link.as_ref() {
+    let task = crate::TASK.get().unwrap();
+    if let Some(link) = task.md_link.as_ref() {
         util::open_md(link);
     }
 
@@ -62,9 +63,11 @@ async fn start_task(total: i32) {
     let page = FinishTaskPage::new();
     page.display();
     page.eval();
-    let page = ModifyWeightPage::new();
-    page.display();
-    page.eval().await;
+    if task.id != 0 {
+        let page = ModifyWeightPage::new();
+        page.display();
+        page.eval().await;
+    }
     let page = ReportUseRatePage::new();
     page.display();
     let use_rate = page.eval();
@@ -77,7 +80,6 @@ async fn start_task(total: i32) {
     println!("Schedule: {total}min, Actual: {min}min");
 
     let db = DB.get().unwrap();
-    let task = crate::TASK.get().unwrap();
     match record_dao::add_record(
         db,
         task.name.clone(),

@@ -27,28 +27,6 @@ pub trait Page {
     fn options(&self) -> &Vec<String>;
 
     fn eval_choice(&self) -> char {
-        loop {
-            let mut input = String::new();
-            match std::io::stdin().read_line(&mut input) {
-                Ok(_) => {
-                    if input.trim_end().len() != 1 {
-                        println!("invalid input");
-                        continue;
-                    }
-                    match input.as_bytes()[0] as char {
-                        c @ 'a'..='z' => {
-                            let i = input.as_bytes()[0] - 'a' as u8;
-                            assert!((i as usize) < self.options().len(), "option out of range");
-                            return c;
-                        }
-                        _ => {
-                            println!("invalid input");
-                            continue;
-                        }
-                    };
-                }
-                Err(error) => println!("error: {error}"),
-            }
-        }
+        rtdb::util::eval_choice(self.options().len() as i32)
     }
 }

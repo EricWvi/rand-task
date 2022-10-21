@@ -13,10 +13,10 @@ impl LandingPage {
         LandingPage {
             title: "How tired are you now?".to_string(),
             options: vec![
-                "I am going to work hard. 👨‍💻".to_string(),
-                "I want to focus on another thing. 💪️".to_string(),
-                "I need to take a break. 🎧".to_string(),
-                "I am very tired. 🪫".to_string(),
+                "💻 I am going to work hard.".to_string(),
+                "💪 I want to focus on another thing.".to_string(),
+                "🎧 I need to take a break.".to_string(),
+                "🪫 I am very tired.".to_string(),
             ],
         }
     }
