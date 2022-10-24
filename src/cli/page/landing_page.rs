@@ -59,28 +59,28 @@ impl Page for LandingPage {
 
 async fn work_tasks() -> Vec<Task> {
     let db = DB.get().unwrap();
-    task_dao::find_tasks_by_type(db, TaskType::Today)
+    task_dao::find_tasks_by_type(db, TaskType::Today, false, false)
         .await
         .expect("failed to find tasks by TaskType::Today")
 }
 
 async fn focus_another_thing_tasks() -> Vec<Task> {
     let db = DB.get().unwrap();
-    task_dao::find_tasks_by_type(db, TaskType::FocusAnotherThing)
+    task_dao::find_tasks_by_type(db, TaskType::FocusAnotherThing, false, false)
         .await
         .expect("failed to find tasks by TaskType::FocusAnotherThing")
 }
 
 async fn take_a_break_tasks() -> Vec<Task> {
     let db = DB.get().unwrap();
-    task_dao::find_tasks_by_type(db, TaskType::TakeABreak)
+    task_dao::find_tasks_by_type(db, TaskType::TakeABreak, false, false)
         .await
         .expect("failed to find tasks by TaskType::TakeABreak")
 }
 
 async fn tired_tasks() -> Vec<Task> {
     let db = DB.get().unwrap();
-    task_dao::find_tasks_by_type(db, TaskType::Tired)
+    task_dao::find_tasks_by_type(db, TaskType::Tired, false, false)
         .await
         .expect("failed to find tasks by TaskType::Tired")
 }

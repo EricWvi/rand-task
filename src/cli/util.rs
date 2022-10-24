@@ -130,8 +130,8 @@ pub fn get_dialog_answer(title: &str, default: &str) -> String {
     rtdb::util::get_dialog_answer(title, default)
 }
 
-pub fn eval_choice(choices: i32) -> char {
-    rtdb::util::eval_choice(choices)
+pub fn eval_choice(choices: i32, new_line: bool) -> char {
+    rtdb::util::eval_choice(choices, new_line)
 }
 
 pub fn lock_screen() {

@@ -23,13 +23,13 @@ async fn main() {
             let name = util::get_dialog_answer("TaskName", "").trim().to_string();
             println!("{name}\n");
             println!("TaskType:  a.Today  b.Focus another thing  c.Take a break  d.Tired");
-            let choice = util::eval_choice(4);
+            let choice = util::eval_choice(4, false);
             let task_type = match choice as char {
                 'a' => TaskType::Today,
                 'b' => TaskType::FocusAnotherThing,
                 'c' => TaskType::TakeABreak,
                 'd' => TaskType::Tired,
-                _ => TaskType::Today,
+                _ => unreachable!(),
             };
 
             TASK.set(Task {

@@ -27,6 +27,6 @@ pub trait Page {
     fn options(&self) -> &Vec<String>;
 
     fn eval_choice(&self) -> char {
-        rtdb::util::eval_choice(self.options().len() as i32)
+        crate::util::eval_choice(self.options().len() as i32, false)
     }
 }
