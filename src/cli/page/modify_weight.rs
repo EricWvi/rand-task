@@ -1,6 +1,6 @@
 use crate::cli::util;
 use crate::Page;
-use rtdb::{task_dao, DB};
+use rtdb::task_dao;
 
 pub struct ModifyWeightPage {
     title: String,
@@ -51,7 +51,7 @@ impl Page for ModifyWeightPage {
 }
 
 async fn modify_weight(weight: i32) {
-    let db = DB.get().unwrap();
+    let db = rtdb::db();
     let task = crate::TASK.get().unwrap();
     match task_dao::update_weight(db, task, weight).await {
         Ok(_) => {}

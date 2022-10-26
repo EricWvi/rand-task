@@ -1,7 +1,7 @@
 use crate::cli::page::{FinishTaskPage, ModifyWeightPage, ReportUseRatePage, TickTockPage};
 use crate::cli::util;
 use crate::Page;
-use rtdb::{record_dao, DB};
+use rtdb::record_dao;
 use std::ops::Sub;
 
 pub struct TimeSpanPage {
@@ -79,7 +79,7 @@ async fn start_task(total: i32) {
     let min = span.num_minutes();
     println!("Schedule: {total}min, Actual: {min}min");
 
-    let db = DB.get().unwrap();
+    let db = rtdb::db();
     match record_dao::add_record(
         db,
         task.name.clone(),

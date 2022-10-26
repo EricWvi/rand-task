@@ -34,7 +34,7 @@ pub fn get_input() -> String {
 
 pub fn open_md(file_name: &str) {
     let path = if file_name.ends_with("md") {
-        let dir = std::env::var("TASK_DIR").expect("TASK_DIR must be set");
+        let dir = rtdb::config::task_dir();
         let mut path = PathBuf::from(dir);
         let task_type = crate::TASK.get().unwrap().r#type;
         path.push(match task_type {

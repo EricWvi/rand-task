@@ -1,7 +1,7 @@
 use super::*;
 use crate::cli::util::rand_task;
 use rtdb::tasks::TaskType;
-use rtdb::{task_dao, Task, DB};
+use rtdb::{task_dao, Task};
 
 pub struct LandingPage {
     title: String,
@@ -57,29 +57,29 @@ impl Page for LandingPage {
     }
 }
 
-async fn work_tasks() -> Vec<Task> {
-    let db = DB.get().unwrap();
+pub async fn work_tasks() -> Vec<Task> {
+    let db = rtdb::db();
     task_dao::find_tasks_by_type(db, TaskType::Today, false, false)
         .await
         .expect("failed to find tasks by TaskType::Today")
 }
 
-async fn focus_another_thing_tasks() -> Vec<Task> {
-    let db = DB.get().unwrap();
+pub async fn focus_another_thing_tasks() -> Vec<Task> {
+    let db = rtdb::db();
     task_dao::find_tasks_by_type(db, TaskType::FocusAnotherThing, false, false)
         .await
         .expect("failed to find tasks by TaskType::FocusAnotherThing")
 }
 
-async fn take_a_break_tasks() -> Vec<Task> {
-    let db = DB.get().unwrap();
+pub async fn take_a_break_tasks() -> Vec<Task> {
+    let db = rtdb::db();
     task_dao::find_tasks_by_type(db, TaskType::TakeABreak, false, false)
         .await
         .expect("failed to find tasks by TaskType::TakeABreak")
 }
 
-async fn tired_tasks() -> Vec<Task> {
-    let db = DB.get().unwrap();
+pub async fn tired_tasks() -> Vec<Task> {
+    let db = rtdb::db();
     task_dao::find_tasks_by_type(db, TaskType::Tired, false, false)
         .await
         .expect("failed to find tasks by TaskType::Tired")

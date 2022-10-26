@@ -6,7 +6,7 @@ mod tick_tock;
 mod time_span;
 
 pub use finish_task::FinishTaskPage;
-pub use landing_page::LandingPage;
+pub use landing_page::*;
 pub use modify_weight::ModifyWeightPage;
 pub use report_use_rate::ReportUseRatePage;
 pub use tick_tock::TickTockPage;
