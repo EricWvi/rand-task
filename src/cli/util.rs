@@ -43,6 +43,7 @@ pub fn open_md(file_name: &str) {
             TaskType::Tired => "tired",
             TaskType::Today => "current-work",
             TaskType::Inbox => "inbox",
+            TaskType::En => "en",
         });
         path.push(file_name);
         path
@@ -157,11 +158,9 @@ pub async fn send_msg(msg: &str) {
 #[cfg(test)]
 mod test {
     use super::progressing_bar;
-    use crate::cli::util::{get_dialog_answer, lock_screen, turn_wifi_off};
-    use std::path::PathBuf;
-    use std::process::Child;
-    use std::thread;
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use crate::cli::util::{get_dialog_answer, open_md, turn_wifi_off};
+    use rtdb::tasks::{TaskStatus, TaskType};
+    use rtdb::Task;
 
     #[test]
     fn test_progressing_bar() {
@@ -175,9 +174,19 @@ mod test {
         );
     }
 
-    #[test]
-    fn test_script() {
-        get_dialog_answer("xx", "");
-        // println!("{}!", );
+    #[tokio::test]
+    async fn test_open_md() {
+        crate::TASK.set(Task {
+            id: 0,
+            name: "".to_string(),
+            md_link: None,
+            r#type: TaskType::Today,
+            weight: 0,
+            status: TaskStatus::Pending,
+        });
+        rtdb::init().await;
+        open_md(
+            "/Users/wangyi/Documents/PersonalFile/Git/Obsidian/RandTask/current-work/rand-task.md",
+        );
     }
 }

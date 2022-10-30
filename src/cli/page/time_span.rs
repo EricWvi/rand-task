@@ -88,6 +88,7 @@ async fn start_task(total: i32) {
         min as i32,
         use_rate,
         task.r#type,
+        task.id,
     )
     .await
     {

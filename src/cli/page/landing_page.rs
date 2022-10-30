@@ -64,6 +64,13 @@ pub async fn work_tasks() -> Vec<Task> {
         .expect("failed to find tasks by TaskType::Today")
 }
 
+pub async fn en_tasks() -> Vec<Task> {
+    let db = rtdb::db();
+    task_dao::find_tasks_by_type(db, TaskType::En, false, false)
+        .await
+        .expect("failed to find tasks by TaskType::En")
+}
+
 pub async fn focus_another_thing_tasks() -> Vec<Task> {
     let db = rtdb::db();
     task_dao::find_tasks_by_type(db, TaskType::FocusAnotherThing, false, false)
