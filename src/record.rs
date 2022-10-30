@@ -48,6 +48,8 @@ pub fn init() -> ToDo {
 }
 
 pub fn flush_todo(old: String, new: String) {
+    tracing::info!("todo old:{old} new:{new}");
+
     let mut path = PathBuf::from(rtdb::config::task_dir());
     let date = chrono::Local::today();
     let file_name = format!("{}.md", date.year());
@@ -137,8 +139,8 @@ impl Into<String> for ToDo {
     }
 }
 
-impl From<String> for ToDo {
-    fn from(value: String) -> Self {
+impl From<&str> for ToDo {
+    fn from(value: &str) -> Self {
         assert_eq!(value.len(), TASK_SEQ.len());
         let mut todo = ToDo {
             inner: Vec::with_capacity(TASK_SEQ.len()),
@@ -154,6 +156,12 @@ impl From<String> for ToDo {
     }
 }
 
+impl From<String> for ToDo {
+    fn from(value: String) -> Self {
+        (&*value).into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::record::ToDo;
@@ -161,32 +169,35 @@ mod test {
 
     #[test]
     fn test_next() {
-        let mut todo: ToDo = "0000000000000000000".to_string().into();
+        let mut todo = ToDo::from("0000000000000000000");
         assert_eq!(todo.next().unwrap(), TaskType::Today);
-        assert_eq!(todo, "1000000000000000000".to_string().into());
+        assert_eq!(todo, "1000000000000000000".into());
         assert_eq!(todo.next().unwrap(), TaskType::En);
-        assert_eq!(todo, "1100000000000000000".to_string().into());
+        assert_eq!(todo, "1100000000000000000".into());
 
-        let mut todo: ToDo = "1111111111111111100".to_string().into();
+        let mut todo = ToDo::from("1111111111111111100");
         assert_eq!(todo.next().unwrap(), TaskType::En);
-        assert_eq!(todo, "1111111111111111110".to_string().into());
+        assert_eq!(todo, "1111111111111111110".into());
         assert_eq!(todo.next().unwrap(), TaskType::Tired);
-        assert_eq!(todo, "1111111111111111111".to_string().into());
+        assert_eq!(todo, "1111111111111111111".into());
 
-        let mut todo: ToDo = "1110111111111111100".to_string().into();
+        let mut todo = ToDo::from("1110111111111111100");
         assert_eq!(todo.next().unwrap(), TaskType::Today);
     }
 
     #[test]
     fn test_select_type() {
-        let mut todo: ToDo = "0000000000000000000".to_string().into();
+        let mut todo = ToDo::from("0000000000000000000");
         todo.select_type(TaskType::En);
-        assert_eq!(todo, "0100000000000000000".to_string().into());
+        assert_eq!(todo, "0100000000000000000".into());
         todo.select_type(TaskType::Today);
-        assert_eq!(todo, "1100000000000000000".to_string().into());
-        let mut todo: ToDo = "1101010100100100100".to_string().into();
+        assert_eq!(todo, "1100000000000000000".into());
+        let mut todo = ToDo::from("1101010100100100100");
         todo.select_type(TaskType::Today);
         todo.select_type(TaskType::Today);
-        assert_eq!(todo, "1101010100100100100".to_string().into());
+        assert_eq!(todo, "1101010100100100100".into());
+        let mut todo = ToDo::from("0010001000000000000");
+        todo.select_type(TaskType::FocusAnotherThing);
+        assert_eq!(todo, "0010001000000000000".into());
     }
 }

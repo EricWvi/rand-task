@@ -6,7 +6,12 @@ use crate::util::rand_task;
 use clap::Parser;
 use rtdb::tasks::{TaskStatus, TaskType};
 use rtdb::Task;
+use std::fs::OpenOptions;
+use std::sync::Mutex;
+use time::macros::format_description;
+use time::UtcOffset;
 use tokio::sync::OnceCell;
+use tracing_subscriber::fmt::time::OffsetTime;
 
 mod cli;
 mod record;
@@ -15,6 +20,29 @@ static TASK: OnceCell<Task> = OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
+    let mut path = std::env::current_exe().unwrap();
+    path.pop();
+    path.push("rand-task.log");
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open(path);
+    let file = match file {
+        Ok(file) => file,
+        Err(error) => panic!("Error: {:?}", error),
+    };
+    tracing_subscriber::fmt()
+        .with_ansi(false)
+        .with_writer(Mutex::new(file))
+        .with_timer(OffsetTime::new(
+            UtcOffset::from_hms(8, 0, 0).unwrap(),
+            format_description!(
+                "[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:3]"
+            ),
+        ))
+        .init();
+
     rtdb::init().await.expect("failed to connect db");
     let mut todo = record::init();
 
@@ -46,6 +74,9 @@ async fn main() {
             })
             .expect("failed to set global TASK");
 
+            let task = TASK.get().unwrap();
+            tracing::info!(?task);
+
             let time_span = TimeSpanPage::new();
             time_span.display();
             time_span.eval().await;
@@ -57,6 +88,7 @@ async fn main() {
                 Err(e) => panic!("{e:?}"),
             };
             todo.select_type(task.r#type);
+            tracing::info!(?task);
             TASK.set(task).expect("failed to set global TASK");
             println!("Task: {}", TASK.get().unwrap().name);
 
@@ -83,10 +115,14 @@ async fn main() {
                     TaskType::En => en_tasks().await,
                 };
                 if tasks.len() == 0 {
-                    println!("You have done all the tasks of TaskType::{task_type:?}. ✅");
+                    println!(
+                        "You have done all the tasks of TaskType::{:?}. ✅",
+                        task_type.unwrap()
+                    );
                     return;
                 }
                 let task = rand_task(&tasks).unwrap();
+                tracing::info!(?task);
                 println!("Task: {}", task.name);
 
                 TASK.set(task.clone()).expect("failed to set global TASK");

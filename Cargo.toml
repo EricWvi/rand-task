@@ -1,6 +1,6 @@
 [package]
 name = "rand-task"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 
 [dependencies]
@@ -10,5 +10,8 @@ dotenv = "0.15.0"
 rand = "0.8.5"
 reqwest = "0.11.12"
 rtctl = { path = "../rtctl" }
+time = "0.3.16"
 tokio = { version = "1", features = ["full"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["time"] }
 wait-timeout = "0.2.0"
