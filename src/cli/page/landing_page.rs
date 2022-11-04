@@ -14,6 +14,7 @@ impl LandingPage {
             title: "How tired are you now?".to_string(),
             options: vec![
                 "💻 I am going to work hard.".to_string(),
+                "💬 I am going to work hard.".to_string(),
                 "💪 I want to focus on another thing.".to_string(),
                 "🎧 I need to take a break.".to_string(),
                 "🪫 I am very tired.".to_string(),
@@ -25,9 +26,10 @@ impl LandingPage {
         let c = self.eval_choice();
         let tasks = match c {
             'a' => work_tasks().await,
-            'b' => focus_another_thing_tasks().await,
-            'c' => take_a_break_tasks().await,
-            'd' => tired_tasks().await,
+            'b' => en_tasks().await,
+            'c' => focus_another_thing_tasks().await,
+            'd' => take_a_break_tasks().await,
+            'e' => tired_tasks().await,
             _ => vec![],
         };
         if tasks.len() == 0 {
