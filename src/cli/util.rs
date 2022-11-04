@@ -158,7 +158,7 @@ pub async fn send_msg(msg: &str) {
 #[cfg(test)]
 mod test {
     use super::progressing_bar;
-    use crate::cli::util::{get_dialog_answer, open_md, turn_wifi_off};
+    use super::{open_md, turn_wifi_off};
     use rtdb::tasks::{TaskStatus, TaskType};
     use rtdb::Task;
 

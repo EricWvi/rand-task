@@ -1,7 +1,10 @@
 [package]
 name = "rand-task"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2021"
+
+[lib]
+name = "rtdb"
 
 [dependencies]
 chrono = "0.4.22"
@@ -9,7 +12,7 @@ clap = { version = "4.0.15", features = ["derive"] }
 dotenv = "0.15.0"
 rand = "0.8.5"
 reqwest = "0.11.12"
-rtctl = { path = "../rtctl" }
+sea-orm = { version = "0.9.3", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print"] }
 time = "0.3.16"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1.37"

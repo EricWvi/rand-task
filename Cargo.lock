@@ -1272,14 +1272,14 @@ dependencies = [
 
 [[package]]
 name = "rand-task"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "chrono",
  "clap",
  "dotenv",
  "rand",
  "reqwest",
- "rtctl",
+ "sea-orm",
  "time 0.3.16",
  "tokio",
  "tracing",
@@ -1385,20 +1385,6 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi",
-]
-
-[[package]]
-name = "rtctl"
-version = "0.13.0"
-dependencies = [
- "chrono",
- "clap",
- "dotenv",
- "sea-orm",
- "time 0.3.16",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
