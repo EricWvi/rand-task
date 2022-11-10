@@ -37,7 +37,7 @@ impl TickTockPage {
                 })());
             }
 
-            print!("\r{}", util::progressing_bar(min, sec, total));
+            util::progressing_bar(min, sec, total).expect("failed to plot progressing bar");
             match std::io::stdout().flush() {
                 Ok(_) => {}
                 Err(e) => {

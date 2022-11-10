@@ -10,7 +10,10 @@ pub async fn update_task(db: &DatabaseConnection, id: i32) {
         Err(e) => panic!("{e:?}"),
     };
 
-    let prev_name = task.md_link.as_ref().unwrap();
+    let prev_name = match task.md_link.as_ref() {
+        None => "null",
+        Some(link) => link,
+    };
     let name = util::get_dialog_answer("Name", &*task.name);
     println!("Name: {name}\n");
     let md_link = match util::get_dialog_answer(
@@ -76,42 +79,44 @@ pub async fn update_task(db: &DatabaseConnection, id: i32) {
         .await
         .expect(&*format!("failed to update task[id={}]", task.id));
 
-    let dir = rtdb::config::task_dir();
-    let mut prev = PathBuf::from(dir);
-    let prev_dir = if prev_status == TaskStatus::Completed {
-        "completed"
-    } else {
-        match prev_type {
-            TaskType::FocusAnotherThing => "focus-another-thing",
-            TaskType::TakeABreak => "take-a-break",
-            TaskType::Tired => "tired",
-            TaskType::Today => "current-work",
-            TaskType::Inbox => "inbox",
-            TaskType::En => "en",
-        }
-    };
-    prev.push(prev_dir);
-    prev.push(prev_name);
-    let mut curr = PathBuf::from(dir);
-    let curr_dir = if task.status == TaskStatus::Completed {
-        "completed"
-    } else {
-        match task.r#type {
-            TaskType::FocusAnotherThing => "focus-another-thing",
-            TaskType::TakeABreak => "take-a-break",
-            TaskType::Tired => "tired",
-            TaskType::Today => "current-work",
-            TaskType::Inbox => "inbox",
-            TaskType::En => "en",
-        }
-    };
-    curr.push(curr_dir);
-    let file_name = task.md_link.as_ref().unwrap();
-    curr.push(file_name);
-    if util::is_rt_md(task.md_link.as_ref()) && prev != curr {
-        if prev.exists() {
-            fs::rename(prev, curr).expect("failed to move md file");
-            println!("Moving {prev_dir}/{prev_name} to {curr_dir}/{file_name}");
+    if prev_name != "null" {
+        let dir = rtdb::config::task_dir();
+        let mut prev = PathBuf::from(dir);
+        let prev_dir = if prev_status == TaskStatus::Completed {
+            "completed"
+        } else {
+            match prev_type {
+                TaskType::FocusAnotherThing => "focus-another-thing",
+                TaskType::TakeABreak => "take-a-break",
+                TaskType::Tired => "tired",
+                TaskType::Today => "current-work",
+                TaskType::Inbox => "inbox",
+                TaskType::En => "en",
+            }
+        };
+        prev.push(prev_dir);
+        prev.push(prev_name);
+        let mut curr = PathBuf::from(dir);
+        let curr_dir = if task.status == TaskStatus::Completed {
+            "completed"
+        } else {
+            match task.r#type {
+                TaskType::FocusAnotherThing => "focus-another-thing",
+                TaskType::TakeABreak => "take-a-break",
+                TaskType::Tired => "tired",
+                TaskType::Today => "current-work",
+                TaskType::Inbox => "inbox",
+                TaskType::En => "en",
+            }
+        };
+        curr.push(curr_dir);
+        let file_name = task.md_link.as_ref().unwrap();
+        curr.push(file_name);
+        if util::is_rt_md(task.md_link.as_ref()) && prev != curr {
+            if prev.exists() {
+                fs::rename(prev, curr).expect("failed to move md file");
+                println!("Moving {prev_dir}/{prev_name} to {curr_dir}/{file_name}");
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ use std::process::{Command, Stdio};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, iter};
+use termcolor::WriteColor;
 
 pub fn rand_task(tasks: &Vec<Task>) -> Option<&Task> {
     let mut total = 0;
@@ -56,21 +57,31 @@ pub fn open_md(file_name: &str) {
         .expect("failed to execute open_md");
 }
 
-pub fn progressing_bar(min: i32, sec: i32, total: i32) -> String {
+pub fn progressing_bar(min: i32, sec: i32, total: i32) -> std::io::Result<()> {
+    use std::io::{self, Write};
+    use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
     let percent = (total * 60 - min * 60 - sec) * 100 / (total * 60);
     let remainder = format!("{}m {}s", min, sec);
-    let mut bar = "|".to_string();
-    for c in iter::repeat('=').take(percent as usize / 5) {
-        bar.push(c);
+    let mut color_bar = String::new();
+    for c in iter::repeat('━').take((percent as f64 / 2.5) as usize) {
+        color_bar.push(c);
     }
     if percent != 100 {
-        bar.push('>')
+        color_bar.push('╸')
     }
-    for c in iter::repeat('-').take(21 - bar.len()) {
-        bar.push(c);
+    let mut bar_end = String::new();
+    for c in iter::repeat('━').take(41 - color_bar.chars().count()) {
+        bar_end.push(c);
     }
-    bar.push('|');
-    format!("{bar} {percent}%, {remainder}")
+    let mut stdout = StandardStream::stdout(ColorChoice::Always);
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+    write!(&mut stdout, "\r{color_bar}")?;
+    stdout.reset()?;
+    print!("{bar_end} {percent}%, ");
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+    print!("{remainder}");
+    stdout.reset()?;
+    Ok(())
 }
 
 pub enum ASCmd {
@@ -161,19 +172,7 @@ mod test {
     use super::{open_md, turn_wifi_off};
     use rtdb::tasks::{TaskStatus, TaskType};
     use rtdb::Task;
-
-    #[test]
-    fn test_progressing_bar() {
-        assert_eq!(
-            progressing_bar(10, 0, 10),
-            "|>-------------------| 0%, 10m 0s".to_string()
-        );
-        assert_eq!(
-            progressing_bar(5, 0, 10),
-            "|==========>---------| 50%, 5m 0s".to_string()
-        );
-    }
-
+    
     #[tokio::test]
     async fn test_open_md() {
         crate::TASK.set(Task {

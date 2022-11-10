@@ -1272,7 +1272,7 @@ dependencies = [
 
 [[package]]
 name = "rand-task"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "chrono",
  "clap",
@@ -1280,6 +1280,7 @@ dependencies = [
  "rand",
  "reqwest",
  "sea-orm",
+ "termcolor",
  "time 0.3.16",
  "tokio",
  "tracing",
