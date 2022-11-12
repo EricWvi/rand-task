@@ -9,6 +9,7 @@ mod rt;
 mod schedule;
 mod search;
 mod select;
+mod today;
 mod update;
 pub mod util;
 
@@ -22,6 +23,7 @@ pub use rt::*;
 pub use schedule::*;
 pub use search::*;
 pub use select::*;
+pub use today::*;
 pub use update::*;
 
 use clap::{Parser, Subcommand};
@@ -58,6 +60,8 @@ pub enum Commands {
     Search { q: String },
     /// select a specific task
     Select { id: i32 },
+    /// show today's todo
+    Today,
     /// update task info
     Update { id: i32 },
 }

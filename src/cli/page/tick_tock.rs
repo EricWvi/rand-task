@@ -52,7 +52,7 @@ impl TickTockPage {
                 sec = 59;
             }
         }
-        println!("\r⏰ Time up!");
+        println!("\n⏰ Time up!");
         tokio::spawn((async || {
             let mut child = util::alert(ASCmd::AlertFinished).spawn().unwrap();
             let thirty_sec = Duration::from_secs(30);

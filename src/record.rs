@@ -1,5 +1,6 @@
 use chrono::Datelike;
 use rtdb::tasks::TaskType;
+use std::fmt::{Display, Formatter};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::{fs, iter};
@@ -65,12 +66,13 @@ pub fn flush_todo(old: String, new: String) {
     fs::write(&path, content).expect("failed to write to autogen");
 }
 
-const TASK_SEQ: [TaskType; 19] = [
+const TASK_SEQ: [TaskType; 20] = [
     TaskType::Today,
     TaskType::En,
     TaskType::FocusAnotherThing,
     TaskType::Today,
     TaskType::En,
+    TaskType::Tired,
     TaskType::Today,
     TaskType::FocusAnotherThing,
     TaskType::Today,
@@ -162,6 +164,33 @@ impl From<String> for ToDo {
     }
 }
 
+impl Display for ToDo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut str = String::new();
+        for (status, task_type) in &self.inner {
+            if !*status {
+                continue;
+            }
+            str += Into::<&str>::into(*task_type);
+            str += " ✅\n";
+        }
+        write!(f, "{}", str)?;
+        let mut todo = self.clone();
+        let mut tail = String::new();
+        for _ in 0..3 {
+            let task_type = todo.next();
+            if task_type.is_some() {
+                tail += Into::<&str>::into(task_type.unwrap());
+                tail += "\n";
+            }
+        }
+        if todo.next().is_some() {
+            tail += "[...]\n";
+        }
+        write!(f, "{}", tail)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::record::ToDo;
@@ -169,35 +198,35 @@ mod test {
 
     #[test]
     fn test_next() {
-        let mut todo = ToDo::from("0000000000000000000");
+        let mut todo = ToDo::from("00000000000000000000");
         assert_eq!(todo.next().unwrap(), TaskType::Today);
-        assert_eq!(todo, "1000000000000000000".into());
+        assert_eq!(todo, "10000000000000000000".into());
         assert_eq!(todo.next().unwrap(), TaskType::En);
-        assert_eq!(todo, "1100000000000000000".into());
+        assert_eq!(todo, "11000000000000000000".into());
 
-        let mut todo = ToDo::from("1111111111111111100");
+        let mut todo = ToDo::from("11111111111111111100");
         assert_eq!(todo.next().unwrap(), TaskType::En);
-        assert_eq!(todo, "1111111111111111110".into());
+        assert_eq!(todo, "11111111111111111110".into());
         assert_eq!(todo.next().unwrap(), TaskType::Tired);
-        assert_eq!(todo, "1111111111111111111".into());
+        assert_eq!(todo, "11111111111111111111".into());
 
-        let mut todo = ToDo::from("1110111111111111100");
+        let mut todo = ToDo::from("11101111111111111100");
         assert_eq!(todo.next().unwrap(), TaskType::Today);
     }
 
     #[test]
     fn test_select_type() {
-        let mut todo = ToDo::from("0000000000000000000");
+        let mut todo = ToDo::from("00000000000000000000");
         todo.select_type(TaskType::En);
-        assert_eq!(todo, "0100000000000000000".into());
+        assert_eq!(todo, "01000000000000000000".into());
         todo.select_type(TaskType::Today);
-        assert_eq!(todo, "1100000000000000000".into());
-        let mut todo = ToDo::from("1101010100100100100");
+        assert_eq!(todo, "11000000000000000000".into());
+        let mut todo = ToDo::from("11010010100100100100");
         todo.select_type(TaskType::Today);
         todo.select_type(TaskType::Today);
-        assert_eq!(todo, "1101010100100100100".into());
-        let mut todo = ToDo::from("0010001000000000000");
+        assert_eq!(todo, "11010010100100100100".into());
+        let mut todo = ToDo::from("00100010000000000000");
         todo.select_type(TaskType::FocusAnotherThing);
-        assert_eq!(todo, "0010001000000000000".into());
+        assert_eq!(todo, "00100001000000000000".into());
     }
 }

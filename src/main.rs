@@ -2,9 +2,7 @@
 
 use crate::cli::page::*;
 use crate::cli::*;
-use crate::util::rand_task;
 use clap::Parser;
-use rtdb::tasks::{TaskStatus, TaskType};
 use rtdb::Task;
 use std::fs::OpenOptions;
 use std::sync::Mutex;
@@ -44,7 +42,7 @@ async fn main() {
         .init();
 
     let db = rtdb::init().await.expect("failed to connect db");
-    let mut todo = record::init();
+    let todo = record::init();
 
     let cli = Cli::parse();
 
@@ -59,6 +57,7 @@ async fn main() {
         Some(Commands::Schedule { ids }) => schedule_task(db, ids).await,
         Some(Commands::Search { q }) => search_task(db, q).await,
         Some(Commands::Select { id }) => select_task(db, *id, todo).await,
+        Some(Commands::Today ) => today(todo).await,
         Some(Commands::Update { id }) => update_task(db, *id).await,
         None => rt(todo).await,
     }

@@ -8,7 +8,6 @@ use std::process::{Command, Stdio};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, iter};
-use termcolor::WriteColor;
 
 pub fn rand_task(tasks: &Vec<Task>) -> Option<&Task> {
     let mut total = 0;
@@ -58,7 +57,7 @@ pub fn open_md(file_name: &str) {
 }
 
 pub fn progressing_bar(min: i32, sec: i32, total: i32) -> std::io::Result<()> {
-    use std::io::{self, Write};
+    use std::io::Write;
     use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
     let percent = (total * 60 - min * 60 - sec) * 100 / (total * 60);
     let remainder = format!("{}m {}s", min, sec);
@@ -74,7 +73,11 @@ pub fn progressing_bar(min: i32, sec: i32, total: i32) -> std::io::Result<()> {
         bar_end.push(c);
     }
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
-    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(if percent != 100 {
+        Color::Red
+    } else {
+        Color::Green
+    })))?;
     write!(&mut stdout, "\r{color_bar}")?;
     stdout.reset()?;
     print!("{bar_end} {percent}%, ");
@@ -172,7 +175,7 @@ mod test {
     use super::{open_md, turn_wifi_off};
     use rtdb::tasks::{TaskStatus, TaskType};
     use rtdb::Task;
-    
+
     #[tokio::test]
     async fn test_open_md() {
         crate::TASK.set(Task {
