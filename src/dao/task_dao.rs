@@ -5,11 +5,13 @@ use sea_orm::{entity::*, query::*, DbConn, DbErr};
 
 pub async fn find_tasks_by_type(
     db: &DbConn,
-    task_type: tasks::TaskType,
+    task_type: TaskType,
     with_pending: bool,
     with_completed: bool,
 ) -> Result<Vec<Task>, DbErr> {
-    let select = Tasks::find().filter(tasks::Column::Type.eq(task_type));
+    let select = Tasks::find()
+        .filter(tasks::Column::Type.eq(task_type))
+        .filter(tasks::Column::Status.ne(TaskStatus::Discarded));
     let select = if with_pending {
         select
     } else {

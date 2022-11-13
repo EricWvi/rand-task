@@ -67,6 +67,8 @@ pub enum TaskStatus {
     Unfinished,
     #[sea_orm(num_value = 3)]
     Completed,
+    #[sea_orm(num_value = 4)]
+    Discarded,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

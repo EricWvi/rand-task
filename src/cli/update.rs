@@ -56,14 +56,15 @@ pub async fn update_task(db: &DatabaseConnection, id: i32) {
     };
 
     println!(
-        "TaskStatus:  a.Pending  b.Scheduled  c.Unfinished  d.Completed  [{:?}]",
+        "TaskStatus:  a.Pending  b.Scheduled  c.Unfinished  d.Completed  e.Discarded  [{:?}]",
         task.status
     );
-    let status = match util::eval_choice(4, true) {
+    let status = match util::eval_choice(5, true) {
         'a' => TaskStatus::Pending,
         'b' => TaskStatus::Scheduled,
         'c' => TaskStatus::Unfinished,
         'd' => TaskStatus::Completed,
+        'e' => TaskStatus::Discarded,
         '\n' => task.status,
         _ => unreachable!(),
     };
@@ -82,33 +83,35 @@ pub async fn update_task(db: &DatabaseConnection, id: i32) {
     if prev_name != "null" {
         let dir = rtdb::config::task_dir();
         let mut prev = PathBuf::from(dir);
-        let prev_dir = if prev_status == TaskStatus::Completed {
-            "completed"
-        } else {
-            match prev_type {
-                TaskType::FocusAnotherThing => "focus-another-thing",
-                TaskType::TakeABreak => "take-a-break",
-                TaskType::Tired => "tired",
-                TaskType::Today => "current-work",
-                TaskType::Inbox => "inbox",
-                TaskType::En => "en",
-            }
-        };
+        let prev_dir =
+            if prev_status == TaskStatus::Completed || prev_status == TaskStatus::Discarded {
+                "completed"
+            } else {
+                match prev_type {
+                    TaskType::FocusAnotherThing => "focus-another-thing",
+                    TaskType::TakeABreak => "take-a-break",
+                    TaskType::Tired => "tired",
+                    TaskType::Today => "current-work",
+                    TaskType::Inbox => "inbox",
+                    TaskType::En => "en",
+                }
+            };
         prev.push(prev_dir);
         prev.push(prev_name);
         let mut curr = PathBuf::from(dir);
-        let curr_dir = if task.status == TaskStatus::Completed {
-            "completed"
-        } else {
-            match task.r#type {
-                TaskType::FocusAnotherThing => "focus-another-thing",
-                TaskType::TakeABreak => "take-a-break",
-                TaskType::Tired => "tired",
-                TaskType::Today => "current-work",
-                TaskType::Inbox => "inbox",
-                TaskType::En => "en",
-            }
-        };
+        let curr_dir =
+            if task.status == TaskStatus::Completed || task.status == TaskStatus::Discarded {
+                "completed"
+            } else {
+                match task.r#type {
+                    TaskType::FocusAnotherThing => "focus-another-thing",
+                    TaskType::TakeABreak => "take-a-break",
+                    TaskType::Tired => "tired",
+                    TaskType::Today => "current-work",
+                    TaskType::Inbox => "inbox",
+                    TaskType::En => "en",
+                }
+            };
         curr.push(curr_dir);
         let file_name = task.md_link.as_ref().unwrap();
         curr.push(file_name);
