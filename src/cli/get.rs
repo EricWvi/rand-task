@@ -1,10 +1,29 @@
-use rtdb::task_dao;
+use rtdb::tasks::TaskStatus;
+use rtdb::{project_dao, task_dao};
 use sea_orm::DatabaseConnection;
 
-pub async fn get_task(db: &DatabaseConnection, id: i32) {
-    let task = match task_dao::find_tasks_by_id(db, id).await {
+pub async fn get_project(db: &DatabaseConnection, id: i32) {
+    let project = match project_dao::find_projects_by_id(db, id).await {
+        Ok(p) => p,
+        Err(e) => panic!("{e:?}"),
+    };
+
+    let tasks = match task_dao::find_tasks_by_project_id(db, project.id).await {
         Ok(t) => t,
         Err(e) => panic!("{e:?}"),
     };
-    println!("{task:#?}");
+    println!("{project:#?}");
+    let tlen = tasks.len();
+    if tlen != 0 {
+        println!("Tasks");
+        for t in tasks.iter().take(tlen - 1) {
+            let status = match t.status {
+                TaskStatus::Unfinished => "",
+                TaskStatus::Completed => "✅",
+                TaskStatus::Discarded => "❎",
+            };
+            println!("├── {} {}", t.name, status);
+        }
+        println!("└── {}", tasks.last().unwrap().name);
+    }
 }

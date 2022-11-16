@@ -1,29 +1,29 @@
-use rtdb::task_dao;
-use rtdb::tasks::TaskStatus;
+use rtdb::project_dao;
+use rtdb::projects::ProjectStatus;
 use sea_orm::DatabaseConnection;
 
-pub async fn schedule_task(db: &DatabaseConnection, ids: &Vec<i32>) {
+pub async fn schedule_project(db: &DatabaseConnection, ids: &Vec<i32>) {
     for id in ids {
-        let task = task_dao::find_tasks_by_id(db, *id)
+        let project = project_dao::find_projects_by_id(db, *id)
             .await
-            .expect("failed to find task by id from db");
-        print!("Task: {}, {:?} to ", task.name, task.status);
-        let task = task_dao::update_status(db, task, TaskStatus::Scheduled)
+            .expect("failed to find project by id from db");
+        print!("Project: {}, {:?} to ", project.name, project.status);
+        let project = project_dao::update_status(db, project, ProjectStatus::Scheduled)
             .await
-            .expect("failed to update task's status'");
-        println!("{:?}", task.status)
+            .expect("failed to update project's status'");
+        println!("{:?}", project.status)
     }
 }
 
-pub async fn deschedule_task(db: &DatabaseConnection, ids: &Vec<i32>) {
+pub async fn deschedule_project(db: &DatabaseConnection, ids: &Vec<i32>) {
     for id in ids {
-        let task = task_dao::find_tasks_by_id(db, *id)
+        let project = project_dao::find_projects_by_id(db, *id)
             .await
-            .expect("failed to find tasks by id from db");
-        print!("Task: {}, {:?} to ", task.name, task.status);
-        let task = task_dao::update_status(db, task, TaskStatus::Pending)
+            .expect("failed to find projects by id from db");
+        print!("Project: {}, {:?} to ", project.name, project.status);
+        let project = project_dao::update_status(db, project, ProjectStatus::Pending)
             .await
-            .expect("failed to update task's status");
-        println!("{:?}", task.status)
+            .expect("failed to update project's status");
+        println!("{:?}", project.status)
     }
 }

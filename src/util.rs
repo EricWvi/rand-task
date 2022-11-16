@@ -39,6 +39,28 @@ pub fn eval_choice(choices: i32, new_line: bool) -> char {
     }
 }
 
+pub fn yes_or_no() -> char {
+    loop {
+        let mut input = String::new();
+        match std::io::stdin().read_line(&mut input) {
+            Ok(_) => {
+                if input.trim_end().len() != 1 {
+                    println!("invalid input");
+                    continue;
+                }
+                match input.as_bytes()[0] as char {
+                    c @ ('y' | 'n') => return c,
+                    _ => {
+                        println!("invalid input");
+                        continue;
+                    }
+                };
+            }
+            Err(error) => println!("error: {error}"),
+        }
+    }
+}
+
 fn execute_as(script: String) -> String {
     let mut dir = std::env::temp_dir();
     let rnd_name = SystemTime::now()

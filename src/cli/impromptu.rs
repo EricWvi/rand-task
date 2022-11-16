@@ -1,36 +1,49 @@
-use rtdb::Task;
-use rtdb::tasks::{TaskStatus, TaskType};
 use crate::cli::page::{Page, TimeSpanPage};
 use crate::cli::util;
-use crate::TASK;
+use crate::{PROJECT, TASK};
+use rtdb::projects::{ProjectStatus, ProjectType};
+use rtdb::tasks::TaskStatus;
+use rtdb::{Project, Task};
 
-pub async fn impromptu_task() {
-    println!("TaskName:");
-    let name = util::get_dialog_answer("TaskName", "").trim().to_string();
+pub async fn impromptu_project() {
+    println!("ProjectName:");
+    let name = util::get_dialog_answer("ProjectName", "")
+        .trim()
+        .to_string();
     println!("{name}\n");
-    println!("TaskType:  a.Today  b.Focus another thing  c.En  d.Take a break  e.Tired");
+    println!("ProjectType:  a.Today  b.Focus another thing  c.En  d.Take a break  e.Tired");
     let choice = util::eval_choice(4, false);
-    let task_type = match choice as char {
-        'a' => TaskType::Today,
-        'b' => TaskType::En,
-        'c' => TaskType::FocusAnotherThing,
-        'd' => TaskType::TakeABreak,
-        'e' => TaskType::Tired,
+    let project_type = match choice as char {
+        'a' => ProjectType::Today,
+        'b' => ProjectType::En,
+        'c' => ProjectType::FocusAnotherThing,
+        'd' => ProjectType::TakeABreak,
+        'e' => ProjectType::Tired,
         _ => unreachable!(),
     };
+
+    PROJECT
+        .set(Project {
+            id: 0,
+            name: name.clone(),
+            md_link: None,
+            r#type: project_type,
+            weight: 1,
+            status: ProjectStatus::Unfinished,
+        })
+        .expect("failed to set global PROJECT");
 
     TASK.set(Task {
         id: 0,
         name,
-        md_link: None,
-        r#type: task_type,
-        weight: 1,
+        file_link: None,
+        project_id: 0,
         status: TaskStatus::Unfinished,
     })
-        .expect("failed to set global TASK");
+    .expect("failed to set global TASK");
 
-    let task = TASK.get().unwrap();
-    tracing::info!(?task);
+    let project = PROJECT.get().unwrap();
+    tracing::info!(?project);
 
     let time_span = TimeSpanPage::new();
     time_span.display();

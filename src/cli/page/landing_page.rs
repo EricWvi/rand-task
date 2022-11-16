@@ -1,7 +1,8 @@
 use super::*;
+use crate::cli::util;
 use crate::cli::util::rand_task;
-use rtdb::tasks::TaskType;
-use rtdb::{task_dao, Task};
+use rtdb::projects::ProjectType;
+use rtdb::{project_dao, Project};
 
 pub struct LandingPage {
     title: String,
@@ -24,24 +25,20 @@ impl LandingPage {
 
     pub async fn eval(&self) {
         let c = self.eval_choice();
-        let tasks = match c {
-            'a' => work_tasks().await,
-            'b' => en_tasks().await,
-            'c' => focus_another_thing_tasks().await,
-            'd' => take_a_break_tasks().await,
-            'e' => tired_tasks().await,
+        let projects = match c {
+            'a' => work_projects().await,
+            'b' => en_projects().await,
+            'c' => focus_another_thing_projects().await,
+            'd' => take_a_break_projects().await,
+            'e' => tired_projects().await,
             _ => vec![],
         };
-        if tasks.len() == 0 {
-            println!("You have done all the tasks of this type. ✅");
+        if projects.len() == 0 {
+            println!("You have done all the projects of this type. ✅");
             return;
         }
-        let task = rand_task(&tasks).unwrap();
-        println!("Task: {}", task.name);
-
-        crate::TASK
-            .set(task.clone())
-            .expect("failed to set global TASK");
+        let project = rand_task(&projects).unwrap();
+        util::set_global(project).await;
 
         let time_span = TimeSpanPage::new();
         time_span.display();
@@ -59,37 +56,37 @@ impl Page for LandingPage {
     }
 }
 
-pub async fn work_tasks() -> Vec<Task> {
+pub async fn work_projects() -> Vec<Project> {
     let db = rtdb::db();
-    task_dao::find_tasks_by_type(db, TaskType::Today, false, false)
+    project_dao::find_projects_by_type(db, ProjectType::Today, false, false)
         .await
-        .expect("failed to find tasks by TaskType::Today")
+        .expect("failed to find projects by ProjectType::Today")
 }
 
-pub async fn en_tasks() -> Vec<Task> {
+pub async fn en_projects() -> Vec<Project> {
     let db = rtdb::db();
-    task_dao::find_tasks_by_type(db, TaskType::En, false, false)
+    project_dao::find_projects_by_type(db, ProjectType::En, false, false)
         .await
-        .expect("failed to find tasks by TaskType::En")
+        .expect("failed to find projects by ProjectType::En")
 }
 
-pub async fn focus_another_thing_tasks() -> Vec<Task> {
+pub async fn focus_another_thing_projects() -> Vec<Project> {
     let db = rtdb::db();
-    task_dao::find_tasks_by_type(db, TaskType::FocusAnotherThing, false, false)
+    project_dao::find_projects_by_type(db, ProjectType::FocusAnotherThing, false, false)
         .await
-        .expect("failed to find tasks by TaskType::FocusAnotherThing")
+        .expect("failed to find projects by ProjectType::FocusAnotherThing")
 }
 
-pub async fn take_a_break_tasks() -> Vec<Task> {
+pub async fn take_a_break_projects() -> Vec<Project> {
     let db = rtdb::db();
-    task_dao::find_tasks_by_type(db, TaskType::TakeABreak, false, false)
+    project_dao::find_projects_by_type(db, ProjectType::TakeABreak, false, false)
         .await
-        .expect("failed to find tasks by TaskType::TakeABreak")
+        .expect("failed to find projects by ProjectType::TakeABreak")
 }
 
-pub async fn tired_tasks() -> Vec<Task> {
+pub async fn tired_projects() -> Vec<Project> {
     let db = rtdb::db();
-    task_dao::find_tasks_by_type(db, TaskType::Tired, false, false)
+    project_dao::find_projects_by_type(db, ProjectType::Tired, false, false)
         .await
-        .expect("failed to find tasks by TaskType::Tired")
+        .expect("failed to find projects by ProjectType::Tired")
 }

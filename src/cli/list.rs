@@ -1,11 +1,11 @@
 use crate::util;
-use rtdb::tasks::{TaskStatus, TaskType};
-use rtdb::{task_dao, task_view};
+use rtdb::projects::{ProjectStatus, ProjectType};
+use rtdb::{project_dao, project_view};
 use sea_orm::DatabaseConnection;
 
-pub async fn list_tasks(db: &DatabaseConnection, mut with_pending: bool) {
+pub async fn list_projects(db: &DatabaseConnection, mut with_pending: bool) {
     println!(
-        "Find tasks by\n\
+        "Find projects by\n\
         📥 a.Inbox\n\
         💻 b.Today\n\
         💬 c.En\n\
@@ -15,44 +15,45 @@ pub async fn list_tasks(db: &DatabaseConnection, mut with_pending: bool) {
         ✅ g.Completed\n\
         📦 h.All"
     );
-    let (tasks, distri) = match util::eval_choice(8, false) {
+    let (projects, distri) = match util::eval_choice(8, false) {
         'g' => {
-            let tasks = task_dao::find_tasks_by_status(db, TaskStatus::Completed)
+            let projects = project_dao::find_projects_by_status(db, ProjectStatus::Completed)
                 .await
-                .expect("failed to list completed tasks from db");
-            (tasks, false)
+                .expect("failed to list completed projects from db");
+            (projects, false)
         }
         'h' => {
-            let tasks = task_dao::find_all_tasks(db)
+            let projects = project_dao::find_all_projects(db)
                 .await
-                .expect("failed to list all tasks from db");
-            (tasks, false)
+                .expect("failed to list all projects from db");
+            (projects, false)
         }
         c @ 'a'..='f' => {
-            let task_type = match c {
+            let project_type = match c {
                 'a' => {
-                    // list Inbox with pending tasks by default
+                    // list Inbox with pending projects by default
                     with_pending = true;
-                    TaskType::Inbox
+                    ProjectType::Inbox
                 }
-                'b' => TaskType::Today,
-                'c' => TaskType::En,
-                'd' => TaskType::FocusAnotherThing,
-                'e' => TaskType::TakeABreak,
-                'f' => TaskType::Tired,
+                'b' => ProjectType::Today,
+                'c' => ProjectType::En,
+                'd' => ProjectType::FocusAnotherThing,
+                'e' => ProjectType::TakeABreak,
+                'f' => ProjectType::Tired,
                 _ => unreachable!(),
             };
-            let tasks = task_dao::find_tasks_by_type(db, task_type, with_pending, false)
-                .await
-                .expect("failed to find tasks by type from db");
-            (tasks, true)
+            let projects =
+                project_dao::find_projects_by_type(db, project_type, with_pending, false)
+                    .await
+                    .expect("failed to find projects by type from db");
+            (projects, true)
         }
         _ => unreachable!(),
     };
 
-    let mut views = tasks
+    let mut views = projects
         .into_iter()
-        .map(|t| task_view::ListView::from(t))
+        .map(|t| project_view::ListView::from(t))
         .collect::<Vec<_>>();
     if distri {
         views.sort_by(|a, b| {

@@ -1,7 +1,7 @@
 use tokio::sync::OnceCell;
 
 static DB_URL: OnceCell<String> = OnceCell::const_new();
-static TASK_DIR: OnceCell<String> = OnceCell::const_new();
+static PROJECT_DIR: OnceCell<String> = OnceCell::const_new();
 
 pub fn init() {
     let mut path = std::env::current_exe().unwrap();
@@ -18,7 +18,7 @@ pub fn init() {
         .set(std::env::var("DATABASE_URL").expect("DATABASE_URL must be set"))
         .expect("DB_URL can not be set");
 
-    TASK_DIR
+    PROJECT_DIR
         .set(std::env::var("TASK_DIR").expect("TASK_DIR must be set"))
         .expect("TASK_DIR can not be set");
 }
@@ -29,6 +29,6 @@ pub fn db_url() -> &'static String {
 }
 
 #[inline]
-pub fn task_dir() -> &'static String {
-    TASK_DIR.get().unwrap()
+pub fn project_dir() -> &'static String {
+    PROJECT_DIR.get().unwrap()
 }

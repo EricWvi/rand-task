@@ -1,12 +1,12 @@
 use chrono::Datelike;
-use rtdb::tasks::TaskType;
+use rtdb::projects::ProjectType;
 use std::fmt::{Display, Formatter};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::{fs, iter};
 
 pub fn init() -> ToDo {
-    let mut path = PathBuf::from(rtdb::config::task_dir());
+    let mut path = PathBuf::from(rtdb::config::project_dir());
     let date = chrono::Local::today();
     let file_name = format!("{}.md", date.year());
     path.push("review/autogen");
@@ -28,8 +28,8 @@ pub fn init() -> ToDo {
     let line = lines.last();
     let title = format!("{}-{}", date.month(), date.day());
     let bit_vector = if line.is_none() || !line.unwrap().contains(title.as_str()) {
-        let mut s = String::with_capacity(TASK_SEQ.len());
-        for c in iter::repeat('0').take(TASK_SEQ.len()) {
+        let mut s = String::with_capacity(PROJECT_SEQ.len());
+        for c in iter::repeat('0').take(PROJECT_SEQ.len()) {
             s.push(c);
         }
         let pattern = format!("{0}-{1} {2}\n", date.month(), date.day(), s);
@@ -51,7 +51,7 @@ pub fn init() -> ToDo {
 pub fn flush_todo(old: String, new: String) {
     tracing::info!("todo old:{old} new:{new}");
 
-    let mut path = PathBuf::from(rtdb::config::task_dir());
+    let mut path = PathBuf::from(rtdb::config::project_dir());
     let date = chrono::Local::today();
     let file_name = format!("{}.md", date.year());
     path.push("review/autogen");
@@ -66,57 +66,57 @@ pub fn flush_todo(old: String, new: String) {
     fs::write(&path, content).expect("failed to write to autogen");
 }
 
-const TASK_SEQ: [TaskType; 20] = [
-    TaskType::Today,
-    TaskType::En,
-    TaskType::FocusAnotherThing,
-    TaskType::Today,
-    TaskType::En,
-    TaskType::Tired,
-    TaskType::Today,
-    TaskType::FocusAnotherThing,
-    TaskType::Today,
-    TaskType::En,
-    TaskType::TakeABreak,
-    TaskType::Today,
-    TaskType::En,
-    TaskType::TakeABreak,
-    TaskType::Today,
-    TaskType::En,
-    TaskType::Tired,
-    TaskType::Today,
-    TaskType::En,
-    TaskType::Tired,
+const PROJECT_SEQ: [ProjectType; 20] = [
+    ProjectType::Today,
+    ProjectType::En,
+    ProjectType::FocusAnotherThing,
+    ProjectType::Today,
+    ProjectType::En,
+    ProjectType::Tired,
+    ProjectType::Today,
+    ProjectType::FocusAnotherThing,
+    ProjectType::Today,
+    ProjectType::En,
+    ProjectType::TakeABreak,
+    ProjectType::Today,
+    ProjectType::En,
+    ProjectType::TakeABreak,
+    ProjectType::Today,
+    ProjectType::En,
+    ProjectType::Tired,
+    ProjectType::Today,
+    ProjectType::En,
+    ProjectType::Tired,
 ];
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct ToDo {
-    inner: Vec<(bool, TaskType)>,
+    inner: Vec<(bool, ProjectType)>,
 }
 
 impl ToDo {
-    pub fn next(&mut self) -> Option<TaskType> {
+    pub fn next(&mut self) -> Option<ProjectType> {
         let mut index = 0;
-        let mut task_type: Option<TaskType> = None;
+        let mut project_type: Option<ProjectType> = None;
         for (i, (b, t)) in self.inner.iter().enumerate() {
             if *b {
                 continue;
             } else {
                 index = i;
-                task_type = Some(*t);
+                project_type = Some(*t);
                 break;
             }
         }
-        if task_type.is_some() {
+        if project_type.is_some() {
             self.inner[index].0 = true;
         }
-        task_type
+        project_type
     }
 
-    pub fn select_type(&mut self, task_type: TaskType) {
+    pub fn select_type(&mut self, project_type: ProjectType) {
         let mut index = -1;
         for (i, (b, t)) in self.inner.iter().enumerate() {
-            if !*b && *t == task_type {
+            if !*b && *t == project_type {
                 index = i as i32;
                 break;
             }
@@ -129,7 +129,7 @@ impl ToDo {
 
 impl Into<String> for ToDo {
     fn into(self) -> String {
-        let mut s = String::with_capacity(TASK_SEQ.len());
+        let mut s = String::with_capacity(PROJECT_SEQ.len());
         for (b, _) in self.inner {
             if b {
                 s.push('1')
@@ -143,14 +143,14 @@ impl Into<String> for ToDo {
 
 impl From<&str> for ToDo {
     fn from(value: &str) -> Self {
-        assert_eq!(value.len(), TASK_SEQ.len());
+        assert_eq!(value.len(), PROJECT_SEQ.len());
         let mut todo = ToDo {
-            inner: Vec::with_capacity(TASK_SEQ.len()),
+            inner: Vec::with_capacity(PROJECT_SEQ.len()),
         };
         for (i, bit) in value.as_bytes().iter().enumerate() {
             match *bit as char {
-                '1' => todo.inner.push((true, TASK_SEQ[i])),
-                '0' => todo.inner.push((false, TASK_SEQ[i])),
+                '1' => todo.inner.push((true, PROJECT_SEQ[i])),
+                '0' => todo.inner.push((false, PROJECT_SEQ[i])),
                 _ => panic!("the bit vector is invalid"),
             }
         }
@@ -167,20 +167,20 @@ impl From<String> for ToDo {
 impl Display for ToDo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut str = String::new();
-        for (status, task_type) in &self.inner {
+        for (status, project_type) in &self.inner {
             if !*status {
                 continue;
             }
-            str += Into::<&str>::into(*task_type);
+            str += Into::<&str>::into(*project_type);
             str += " ✅\n";
         }
         write!(f, "{}", str)?;
         let mut todo = self.clone();
         let mut tail = String::new();
         for _ in 0..3 {
-            let task_type = todo.next();
-            if task_type.is_some() {
-                tail += Into::<&str>::into(task_type.unwrap());
+            let project_type = todo.next();
+            if project_type.is_some() {
+                tail += Into::<&str>::into(project_type.unwrap());
                 tail += "\n";
             }
         }
@@ -194,39 +194,39 @@ impl Display for ToDo {
 #[cfg(test)]
 mod test {
     use crate::record::ToDo;
-    use rtdb::tasks::TaskType;
+    use rtdb::projects::ProjectType;
 
     #[test]
     fn test_next() {
         let mut todo = ToDo::from("00000000000000000000");
-        assert_eq!(todo.next().unwrap(), TaskType::Today);
+        assert_eq!(todo.next().unwrap(), ProjectType::Today);
         assert_eq!(todo, "10000000000000000000".into());
-        assert_eq!(todo.next().unwrap(), TaskType::En);
+        assert_eq!(todo.next().unwrap(), ProjectType::En);
         assert_eq!(todo, "11000000000000000000".into());
 
         let mut todo = ToDo::from("11111111111111111100");
-        assert_eq!(todo.next().unwrap(), TaskType::En);
+        assert_eq!(todo.next().unwrap(), ProjectType::En);
         assert_eq!(todo, "11111111111111111110".into());
-        assert_eq!(todo.next().unwrap(), TaskType::Tired);
+        assert_eq!(todo.next().unwrap(), ProjectType::Tired);
         assert_eq!(todo, "11111111111111111111".into());
 
         let mut todo = ToDo::from("11101111111111111100");
-        assert_eq!(todo.next().unwrap(), TaskType::Today);
+        assert_eq!(todo.next().unwrap(), ProjectType::Today);
     }
 
     #[test]
     fn test_select_type() {
         let mut todo = ToDo::from("00000000000000000000");
-        todo.select_type(TaskType::En);
+        todo.select_type(ProjectType::En);
         assert_eq!(todo, "01000000000000000000".into());
-        todo.select_type(TaskType::Today);
+        todo.select_type(ProjectType::Today);
         assert_eq!(todo, "11000000000000000000".into());
         let mut todo = ToDo::from("11010010100100100100");
-        todo.select_type(TaskType::Today);
-        todo.select_type(TaskType::Today);
+        todo.select_type(ProjectType::Today);
+        todo.select_type(ProjectType::Today);
         assert_eq!(todo, "11010010100100100100".into());
         let mut todo = ToDo::from("00100010000000000000");
-        todo.select_type(TaskType::FocusAnotherThing);
+        todo.select_type(ProjectType::FocusAnotherThing);
         assert_eq!(todo, "00100001000000000000".into());
     }
 }

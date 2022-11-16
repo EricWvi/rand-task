@@ -1,13 +1,13 @@
-use rtdb::{task_dao, task_view};
+use rtdb::{project_dao, project_view};
 use sea_orm::DatabaseConnection;
 
-pub async fn search_task(db: &DatabaseConnection, q: &String) {
-    let tasks = task_dao::find_tasks_by_name(db, &*q)
+pub async fn search_project(db: &DatabaseConnection, q: &String) {
+    let projects = project_dao::find_projects_by_name(db, &*q)
         .await
-        .expect("failed to find tasks by type from db");
-    let views = tasks
+        .expect("failed to find projects by type from db");
+    let views = projects
         .into_iter()
-        .map(|t| task_view::ListView::from(t))
+        .map(|t| project_view::ListView::from(t))
         .collect::<Vec<_>>();
     for view in views {
         println!("{view}");

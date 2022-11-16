@@ -1,1 +1,1 @@
-pub mod task_view;
+pub mod project_view;

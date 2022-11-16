@@ -1,13 +1,15 @@
 use crate::util;
-use rtdb::tasks::TaskType;
-use rtdb::{config, task_dao};
+use rtdb::projects::ProjectType;
+use rtdb::{config, project_dao};
 use sea_orm::DatabaseConnection;
 use std::fs::File;
 use std::path::PathBuf;
 
-pub async fn add_task(db: &DatabaseConnection) {
-    println!("TaskName:");
-    let name = util::get_dialog_answer("TaskName", "").trim().to_string();
+pub async fn add_project(db: &DatabaseConnection) {
+    println!("ProjectName:");
+    let name = util::get_dialog_answer("ProjectName", "")
+        .trim()
+        .to_string();
     println!("{name}\n");
 
     println!("MdLink:");
@@ -20,20 +22,20 @@ pub async fn add_task(db: &DatabaseConnection) {
         _ => Some(link),
     };
 
-    let task_type = TaskType::Inbox;
+    let project_type = ProjectType::Inbox;
     if md_link.is_some() && md_link.as_ref().unwrap().ends_with("md") {
-        let mut task_dir = PathBuf::from(config::task_dir());
+        let mut project_dir = PathBuf::from(config::project_dir());
         let folder = "inbox";
-        task_dir.push(folder);
-        task_dir.push(md_link.clone().unwrap());
-        if !task_dir.exists() {
-            File::create(task_dir).expect("failed to create file");
+        project_dir.push(folder);
+        project_dir.push(md_link.clone().unwrap());
+        if !project_dir.exists() {
+            File::create(project_dir).expect("failed to create file");
         }
     }
 
     let weight = 1;
 
-    match task_dao::add_task(db, name, md_link, task_type, weight).await {
+    match project_dao::add_project(db, name, md_link, project_type, weight).await {
         Ok(t) => {
             println!("{t:?}")
         }

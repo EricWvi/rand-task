@@ -9,6 +9,7 @@ mod rt;
 mod schedule;
 mod search;
 mod select;
+mod task;
 mod today;
 mod update;
 pub mod util;
@@ -23,6 +24,7 @@ pub use rt::*;
 pub use schedule::*;
 pub use search::*;
 pub use select::*;
+pub use task::*;
 pub use today::*;
 pub use update::*;
 
@@ -37,31 +39,42 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// add task to db
+    /// add project to db
     Add,
-    /// move tasks in Inbox to other TaskType
+    /// move projects in Inbox to other ProjectType
     Classify,
-    /// change task status to `Completed`
+    /// change project status to `Completed`
     Complete { ids: Vec<i32> },
-    /// change task status from `Scheduled` to `Pending`
+    /// change project status from `Scheduled` to `Pending`
     Deschedule { ids: Vec<i32> },
-    /// get info of a specific task
+    /// get info of a specific project
     Get { id: i32 },
-    /// take an unscheduled task
+    /// take an unscheduled project
     Impromptu,
-    /// list tasks from db
+    /// list projects from db
     List {
         #[arg(short, long)]
         all: bool,
     },
-    /// change task status from `Pending` to `Scheduled`
+    /// change project status from `Pending` to `Scheduled`
     Schedule { ids: Vec<i32> },
-    /// search task info from db
+    /// search project info from db
     Search { q: String },
-    /// select a specific task
+    /// select a specific project
     Select { id: i32 },
+    /// task-related commands
+    Task {
+        #[command(subcommand)]
+        command: TaskCommand,
+    },
     /// show today's todo
     Today,
-    /// update task info
+    /// update project info
     Update { id: i32 },
+}
+
+#[derive(Subcommand)]
+pub enum TaskCommand {
+    /// add task to a project
+    Add { pid: i32 },
 }

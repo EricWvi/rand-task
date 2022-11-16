@@ -1,14 +1,14 @@
-use crate::tasks::{TaskStatus, TaskType};
-use crate::Task;
+use crate::projects::{ProjectStatus, ProjectType};
+use crate::Project;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct ListView {
     pub id: i32,
     pub name: String,
-    pub r#type: TaskType,
+    pub r#type: ProjectType,
     pub weight: i32,
-    pub status: TaskStatus,
+    pub status: ProjectStatus,
 }
 
 impl Display for ListView {
@@ -21,8 +21,8 @@ impl Display for ListView {
     }
 }
 
-impl From<Task> for ListView {
-    fn from(t: Task) -> Self {
+impl From<Project> for ListView {
+    fn from(t: Project) -> Self {
         ListView {
             id: t.id,
             name: t.name.clone(),

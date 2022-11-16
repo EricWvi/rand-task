@@ -1,37 +1,36 @@
 use crate::cli::page::*;
+use crate::cli::util;
 use crate::cli::util::rand_task;
+use crate::record;
 use crate::record::ToDo;
-use crate::{record, TASK};
-use rtdb::tasks::TaskType;
+use rtdb::projects::ProjectType;
 
 pub async fn rt(mut todo: ToDo) {
     let old: String = todo.clone().into();
-    let task_type = todo.next();
-    if task_type.is_none() {
+    let project_type = todo.next();
+    if project_type.is_none() {
         let landing_page = LandingPage::new();
         landing_page.display();
         landing_page.eval().await;
     } else {
-        let tasks = match task_type.unwrap() {
-            TaskType::FocusAnotherThing => focus_another_thing_tasks().await,
-            TaskType::TakeABreak => take_a_break_tasks().await,
-            TaskType::Tired => tired_tasks().await,
-            TaskType::Today => work_tasks().await,
-            TaskType::Inbox => unreachable!(),
-            TaskType::En => en_tasks().await,
+        let projects = match project_type.unwrap() {
+            ProjectType::FocusAnotherThing => focus_another_thing_projects().await,
+            ProjectType::TakeABreak => take_a_break_projects().await,
+            ProjectType::Tired => tired_projects().await,
+            ProjectType::Today => work_projects().await,
+            ProjectType::Inbox => unreachable!(),
+            ProjectType::En => en_projects().await,
         };
-        if tasks.len() == 0 {
+        if projects.len() == 0 {
             println!(
-                "You have done all the tasks of TaskType::{:?}. ✅",
-                task_type.unwrap()
+                "You have done all the projects of ProjectType::{:?}. ✅",
+                project_type.unwrap()
             );
             return;
         }
-        let task = rand_task(&tasks).unwrap();
-        tracing::info!(?task);
-        println!("Task: {}", task.name);
-
-        TASK.set(task.clone()).expect("failed to set global TASK");
+        let project = rand_task(&projects).unwrap();
+        tracing::info!(?project);
+        util::set_global(project).await;
 
         let time_span = TimeSpanPage::new();
         time_span.display();

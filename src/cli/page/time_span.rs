@@ -1,4 +1,6 @@
-use crate::cli::page::{FinishTaskPage, ModifyWeightPage, ReportUseRatePage, TickTockPage};
+use crate::cli::page::{
+    CompleteTaskPage, FinishTaskPage, ModifyWeightPage, ReportUseRatePage, TickTockPage,
+};
 use crate::cli::util;
 use crate::Page;
 use rtdb::record_dao;
@@ -50,9 +52,15 @@ impl Page for TimeSpanPage {
 }
 
 async fn start_task(total: i32) {
-    let task = crate::TASK.get().unwrap();
-    if let Some(link) = task.md_link.as_ref() {
-        util::open_md(link);
+    let project = crate::PROJECT.get().unwrap();
+    let task = crate::TASK.get();
+    if let Some(link) = project.md_link.as_ref() {
+        util::open_link(link);
+    }
+    if task.is_some() {
+        if let Some(link) = task.unwrap().file_link.as_ref() {
+            util::open_link(link);
+        }
     }
 
     let start = chrono::Local::now().naive_local();
@@ -63,8 +71,12 @@ async fn start_task(total: i32) {
     let page = FinishTaskPage::new();
     page.display();
     page.eval();
-    if task.id != 0 {
+    if project.id != 0 {
         let page = ModifyWeightPage::new();
+        page.display();
+        page.eval().await;
+
+        let page = CompleteTaskPage::new();
         page.display();
         page.eval().await;
     }
@@ -80,15 +92,22 @@ async fn start_task(total: i32) {
     println!("Schedule: {total}min, Actual: {min}min");
 
     let db = rtdb::db();
+    let (task_name, task_id) = if task.is_some() {
+        let task = task.unwrap();
+        (format!("{} - {}", project.name, task.name), task.id)
+    } else {
+        (project.name.clone(), 0)
+    };
     match record_dao::add_record(
         db,
-        task.name.clone(),
+        task_name,
         start,
         total,
         min as i32,
         use_rate,
-        task.r#type,
-        task.id,
+        project.r#type,
+        project.id,
+        task_id,
     )
     .await
     {

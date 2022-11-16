@@ -1,15 +1,15 @@
 #![allow(dead_code)]
 
 use rand::Rng;
-use rtdb::tasks::TaskType;
-use rtdb::Task;
+use rtdb::projects::ProjectType;
+use rtdb::{task_dao, Project};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, iter};
 
-pub fn rand_task(tasks: &Vec<Task>) -> Option<&Task> {
+pub fn rand_task(tasks: &Vec<Project>) -> Option<&Project> {
     let mut total = 0;
     for t in tasks {
         total += t.weight;
@@ -32,18 +32,38 @@ pub fn get_input() -> String {
     input
 }
 
-pub fn open_md(file_name: &str) {
+pub async fn set_global(project: &Project) {
+    let task = match task_dao::get_first_task(rtdb::db(), project.id).await {
+        Ok(t) => t,
+        Err(e) => panic!("{e:?}"),
+    };
+    if task.is_some() {
+        println!("Task: {} - {}", project.name, task.as_ref().unwrap().name);
+        crate::TASK
+            .set(task.unwrap())
+            .expect("failed to set global TASK");
+    } else {
+        println!("Task: {}", project.name);
+        print!("\u{001b}[37;41;1m WARN \u{001b}[0m");
+        println!(" the project has no subtasks");
+    }
+    crate::PROJECT
+        .set(project.clone())
+        .expect("failed to set global PROJECT");
+}
+
+pub fn open_link(file_name: &str) {
     let path = if file_name.ends_with("md") {
-        let dir = rtdb::config::task_dir();
+        let dir = rtdb::config::project_dir();
         let mut path = PathBuf::from(dir);
-        let task_type = crate::TASK.get().unwrap().r#type;
-        path.push(match task_type {
-            TaskType::FocusAnotherThing => "focus-another-thing",
-            TaskType::TakeABreak => "take-a-break",
-            TaskType::Tired => "tired",
-            TaskType::Today => "current-work",
-            TaskType::Inbox => "inbox",
-            TaskType::En => "en",
+        let project_type = crate::PROJECT.get().unwrap().r#type;
+        path.push(match project_type {
+            ProjectType::FocusAnotherThing => "focus-another-thing",
+            ProjectType::TakeABreak => "take-a-break",
+            ProjectType::Tired => "tired",
+            ProjectType::Today => "current-work",
+            ProjectType::Inbox => "inbox",
+            ProjectType::En => "en",
         });
         path.push(file_name);
         path
@@ -172,23 +192,29 @@ pub async fn send_msg(msg: &str) {
 #[cfg(test)]
 mod test {
     use super::progressing_bar;
-    use super::{open_md, turn_wifi_off};
-    use rtdb::tasks::{TaskStatus, TaskType};
-    use rtdb::Task;
+    use super::{open_link, turn_wifi_off};
+    use rtdb::projects::{ProjectStatus, ProjectType};
+    use rtdb::Project;
 
     #[tokio::test]
     async fn test_open_md() {
-        crate::TASK.set(Task {
+        crate::PROJECT.set(Project {
             id: 0,
             name: "".to_string(),
             md_link: None,
-            r#type: TaskType::Today,
+            r#type: ProjectType::Today,
             weight: 0,
-            status: TaskStatus::Pending,
+            status: ProjectStatus::Pending,
         });
         rtdb::init().await;
-        open_md(
+        open_link(
             "/Users/wangyi/Documents/PersonalFile/Git/Obsidian/RandTask/current-work/rand-task.md",
         );
+    }
+
+    #[tokio::test]
+    async fn test_print_color() {
+        println!("\u{001b}[31;1mHelloWorld\u{001b}[0m");
+        println!("\u{001b}[37;41;1m WARN \u{001b}[0m");
     }
 }
