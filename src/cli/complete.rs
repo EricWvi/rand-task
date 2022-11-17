@@ -12,7 +12,7 @@ pub async fn complete_project(db: &DatabaseConnection, ids: &Vec<i32>) {
         print!("Project: {}, {:?} to ", project.name, project.status);
         let project = project_dao::update_status(db, project, ProjectStatus::Completed)
             .await
-            .expect("failed to update project's status'");
+            .expect("failed to update project's status");
         println!("{:?}", project.status);
 
         if util::is_rt_md(project.md_link.as_ref()) {

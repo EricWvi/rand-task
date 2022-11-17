@@ -22,8 +22,14 @@ pub async fn get_project(db: &DatabaseConnection, id: i32) {
                 TaskStatus::Completed => "✅",
                 TaskStatus::Discarded => "❎",
             };
-            println!("├── {} {}", t.name, status);
+            println!("├── {} {} {}", t.id, t.name, status);
         }
-        println!("└── {}", tasks.last().unwrap().name);
+        let last = tasks.last().unwrap();
+        let status = match last.status {
+            TaskStatus::Unfinished => "",
+            TaskStatus::Completed => "✅",
+            TaskStatus::Discarded => "❎",
+        };
+        println!("└── {} {} {}", last.id, last.name, status);
     }
 }

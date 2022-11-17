@@ -15,7 +15,7 @@ mod cli;
 mod record;
 
 static PROJECT: OnceCell<Project> = OnceCell::const_new();
-static TASK: OnceCell<Task> = OnceCell::const_new();
+static TASK: OnceCell<Mutex<Task>> = OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
@@ -60,6 +60,8 @@ async fn main() {
         Some(Commands::Select { id }) => select_project(db, *id, todo).await,
         Some(Commands::Task { command }) => match command {
             TaskCommand::Add { pid } => add_task(db, *pid).await,
+            TaskCommand::Complete { tids } => complete_tasks(db, tids).await,
+            TaskCommand::Update { tid } => update_task(db, *tid).await,
         },
         Some(Commands::Today) => today(todo).await,
         Some(Commands::Update { id }) => update_project(db, *id).await,

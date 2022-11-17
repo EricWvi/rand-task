@@ -19,6 +19,11 @@ pub async fn add_task(
     .await
 }
 
+pub async fn find_task_by_id(db: &DbConn, task_id: i32) -> Result<Task, DbErr> {
+    let task: Option<Task> = Tasks::find_by_id(task_id).one(db).await?;
+    task.ok_or(DbErr::RecordNotFound("task_id does not exist".to_string()))
+}
+
 pub async fn find_tasks_by_project_id(db: &DbConn, project_id: i32) -> Result<Vec<Task>, DbErr> {
     let tasks: Vec<Task> = Tasks::find()
         .filter(tasks::Column::ProjectId.eq(project_id))
@@ -36,11 +41,28 @@ pub async fn get_first_task(db: &DbConn, project_id: i32) -> Result<Option<Task>
     Ok(task)
 }
 
-pub async fn update_status(
-    db: &DbConn,
-    task: Task,
-    status: TaskStatus,
-) -> Result<Task, DbErr> {
+pub async fn update_task(db: &DbConn, old: &Task, new: &Task) -> Result<Task, DbErr> {
+    if old == new {
+        return Ok(new.clone());
+    }
+
+    let mut task: tasks::ActiveModel = old.clone().into();
+    if old.name != new.name {
+        task.name = Set(new.name.clone());
+    }
+    if old.file_link != new.file_link {
+        task.file_link = Set(new.file_link.clone());
+    }
+    if old.project_id != new.project_id {
+        task.project_id = Set(new.project_id);
+    }
+    if old.status != new.status {
+        task.status = Set(new.status);
+    }
+    task.update(db).await
+}
+
+pub async fn update_status(db: &DbConn, task: Task, status: TaskStatus) -> Result<Task, DbErr> {
     let mut task: tasks::ActiveModel = task.into();
     task.status = Set(status);
     task.update(db).await
@@ -48,6 +70,8 @@ pub async fn update_status(
 
 #[cfg(test)]
 mod test {
+    use crate::tasks::TaskStatus;
+    use crate::Task;
     use sea_orm::DatabaseConnection;
 
     async fn db() -> &'static DatabaseConnection {
@@ -67,6 +91,24 @@ mod test {
         let project = super::find_tasks_by_project_id(db().await, 72)
             .await
             .unwrap();
+        dbg!(project);
+    }
+
+    #[tokio::test]
+    async fn test_update_task() {
+        let project = super::update_status(
+            db().await,
+            Task {
+                id: 0,
+                name: "".to_string(),
+                file_link: None,
+                project_id: 0,
+                status: TaskStatus::Unfinished,
+            },
+            TaskStatus::Completed,
+        )
+        .await
+        .unwrap();
         dbg!(project);
     }
 }

@@ -12,7 +12,8 @@ pub async fn select_project(db: &DatabaseConnection, id: i32, mut todo: ToDo) {
     };
     todo.select_type(project.r#type);
     tracing::info!(?project);
-    util::set_global(&project).await;
+    util::set_global_project(&project);
+    util::set_global_task(&project).await;
 
     let time_span = TimeSpanPage::new();
     time_span.display();

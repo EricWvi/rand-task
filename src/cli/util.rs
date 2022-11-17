@@ -6,6 +6,7 @@ use rtdb::{task_dao, Project};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
+use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, iter};
 
@@ -32,21 +33,33 @@ pub fn get_input() -> String {
     input
 }
 
-pub async fn set_global(project: &Project) {
+pub async fn set_global_task(project: &Project) {
     let task = match task_dao::get_first_task(rtdb::db(), project.id).await {
         Ok(t) => t,
         Err(e) => panic!("{e:?}"),
     };
     if task.is_some() {
         println!("Task: {} - {}", project.name, task.as_ref().unwrap().name);
-        crate::TASK
-            .set(task.unwrap())
-            .expect("failed to set global TASK");
+        if crate::TASK.get().is_none() {
+            crate::TASK
+                .set(Mutex::new(task.unwrap()))
+                .expect("failed to set global TASK");
+        } else {
+            let mut t = crate::TASK.get().unwrap().lock().unwrap();
+            *t = task.unwrap();
+        }
     } else {
         println!("Task: {}", project.name);
         print!("\u{001b}[37;41;1m WARN \u{001b}[0m");
         println!(" the project has no subtasks");
+        if crate::TASK.get().is_some() {
+            let mut t = crate::TASK.get().unwrap().lock().unwrap();
+            t.id = 0;
+        }
     }
+}
+
+pub fn set_global_project(project: &Project) {
     crate::PROJECT
         .set(project.clone())
         .expect("failed to set global PROJECT");

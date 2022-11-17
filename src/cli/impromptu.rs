@@ -4,6 +4,7 @@ use crate::{PROJECT, TASK};
 use rtdb::projects::{ProjectStatus, ProjectType};
 use rtdb::tasks::TaskStatus;
 use rtdb::{Project, Task};
+use std::sync::Mutex;
 
 pub async fn impromptu_project() {
     println!("ProjectName:");
@@ -33,13 +34,13 @@ pub async fn impromptu_project() {
         })
         .expect("failed to set global PROJECT");
 
-    TASK.set(Task {
+    TASK.set(Mutex::new(Task {
         id: 0,
         name,
         file_link: None,
         project_id: 0,
         status: TaskStatus::Unfinished,
-    })
+    }))
     .expect("failed to set global TASK");
 
     let project = PROJECT.get().unwrap();

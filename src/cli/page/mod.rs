@@ -1,4 +1,5 @@
 mod complete_task;
+mod ctrlc_page;
 mod finish_task;
 mod landing_page;
 mod modify_weight;
@@ -7,6 +8,7 @@ mod tick_tock;
 mod time_span;
 
 pub use complete_task::CompleteTaskPage;
+pub use ctrlc_page::CtrlCPage;
 pub use finish_task::FinishTaskPage;
 pub use landing_page::*;
 pub use modify_weight::ModifyWeightPage;

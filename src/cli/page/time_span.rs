@@ -58,7 +58,7 @@ async fn start_task(total: i32) {
         util::open_link(link);
     }
     if task.is_some() {
-        if let Some(link) = task.unwrap().file_link.as_ref() {
+        if let Some(link) = task.unwrap().lock().unwrap().file_link.as_ref() {
             util::open_link(link);
         }
     }
@@ -67,7 +67,7 @@ async fn start_task(total: i32) {
     println!("{start}");
 
     let page = TickTockPage::new();
-    page.eval(total);
+    page.eval(total).await;
     let page = FinishTaskPage::new();
     page.display();
     page.eval();
@@ -76,9 +76,13 @@ async fn start_task(total: i32) {
         page.display();
         page.eval().await;
 
-        let page = CompleteTaskPage::new();
-        page.display();
-        page.eval().await;
+        if task.is_some() {
+            if task.unwrap().lock().unwrap().id != 0 {
+                let page = CompleteTaskPage::new();
+                page.display();
+                page.eval().await;
+            }
+        }
     }
     let page = ReportUseRatePage::new();
     page.display();
@@ -93,7 +97,7 @@ async fn start_task(total: i32) {
 
     let db = rtdb::db();
     let (task_name, task_id) = if task.is_some() {
-        let task = task.unwrap();
+        let task = task.unwrap().lock().unwrap();
         (format!("{} - {}", project.name, task.name), task.id)
     } else {
         (project.name.clone(), 0)

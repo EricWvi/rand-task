@@ -77,4 +77,8 @@ pub enum Commands {
 pub enum TaskCommand {
     /// add task to a project
     Add { pid: i32 },
+    /// complete a task
+    Complete { tids: Vec<i32> },
+    /// update task info
+    Update { tid: i32 },
 }

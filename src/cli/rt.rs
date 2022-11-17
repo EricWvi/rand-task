@@ -30,7 +30,8 @@ pub async fn rt(mut todo: ToDo) {
         }
         let project = rand_task(&projects).unwrap();
         tracing::info!(?project);
-        util::set_global(project).await;
+        util::set_global_project(project);
+        util::set_global_task(project).await;
 
         let time_span = TimeSpanPage::new();
         time_span.display();

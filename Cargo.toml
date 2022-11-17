@@ -1,6 +1,6 @@
 [package]
 name = "rand-task"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 
 [lib]
@@ -9,6 +9,7 @@ name = "rtdb"
 [dependencies]
 chrono = "0.4.22"
 clap = { version = "4.0.15", features = ["derive"] }
+ctrlc = "3.2.3"
 dotenv = "0.15.0"
 rand = "0.8.5"
 reqwest = "0.11.12"

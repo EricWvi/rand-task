@@ -1,7 +1,11 @@
+use crate::cli::page::ctrlc_page::CtrlCPage;
 use crate::cli::util;
 use crate::cli::util::ASCmd;
 use crate::Page;
 use std::io::Write;
+use std::process;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 use wait_timeout::ChildExt;
@@ -19,9 +23,22 @@ impl TickTockPage {
         }
     }
 
-    pub fn eval(&self, total: i32) {
+    pub async fn eval(&self, total: i32) {
         let mut min = total;
         let mut sec = 0;
+
+        let running = Arc::new(AtomicBool::new(true));
+        let normal = Arc::new(AtomicBool::new(false));
+        let r = running.clone();
+        let n = normal.clone();
+        ctrlc::set_handler(move || {
+            if n.load(Ordering::SeqCst) {
+                process::exit(1);
+            }
+            r.store(false, Ordering::SeqCst);
+        })
+        .expect("Error setting Ctrl-C handler");
+
         while sec >= 0 && min >= 0 {
             if sec == 0 && min == 5 {
                 tokio::spawn((async || {
@@ -51,7 +68,17 @@ impl TickTockPage {
                 min -= 1;
                 sec = 59;
             }
+
+            // Ctrl + C
+            if !running.load(Ordering::SeqCst) {
+                let page = CtrlCPage::new();
+                page.display();
+                page.eval().await;
+                running.store(true, Ordering::SeqCst);
+            }
         }
+        normal.store(true, Ordering::SeqCst);
+
         println!("\n⏰ Time up!");
         tokio::spawn((async || {
             let mut child = util::alert(ASCmd::AlertFinished).spawn().unwrap();
