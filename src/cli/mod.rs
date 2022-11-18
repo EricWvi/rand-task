@@ -79,6 +79,8 @@ pub enum TaskCommand {
     Add { pid: i32 },
     /// complete a task
     Complete { tids: Vec<i32> },
+    /// move a task top
+    Top { tid: i32 },
     /// update task info
     Update { tid: i32 },
 }

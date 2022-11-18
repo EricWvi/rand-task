@@ -9,6 +9,20 @@ pub struct Model {
     pub file_link: Option<String>,
     pub project_id: i32,
     pub status: TaskStatus,
+    pub seq: i32,
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Model {
+            id: 0,
+            name: "".to_string(),
+            file_link: None,
+            project_id: 0,
+            status: TaskStatus::Unfinished,
+            seq: 0,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, EnumIter, DeriveActiveEnum)]

@@ -59,11 +59,12 @@ pub async fn update_project(db: &DatabaseConnection, id: i32) {
         "ProjectStatus:  a.Pending  b.Scheduled  c.Unfinished  d.Completed  e.Discarded  [{:?}]",
         project.status
     );
-    let status = match util::eval_choice(4, true) {
+    let status = match util::eval_choice(5, true) {
         'a' => ProjectStatus::Pending,
         'b' => ProjectStatus::Scheduled,
-        'c' => ProjectStatus::Completed,
-        'd' => ProjectStatus::Discarded,
+        'c' => ProjectStatus::Unfinished,
+        'd' => ProjectStatus::Completed,
+        'e' => ProjectStatus::Discarded,
         '\n' => project.status,
         _ => unreachable!(),
     };

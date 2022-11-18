@@ -40,6 +40,7 @@ pub async fn impromptu_project() {
         file_link: None,
         project_id: 0,
         status: TaskStatus::Unfinished,
+        seq: 0,
     }))
     .expect("failed to set global TASK");
 

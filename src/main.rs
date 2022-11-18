@@ -61,6 +61,7 @@ async fn main() {
         Some(Commands::Task { command }) => match command {
             TaskCommand::Add { pid } => add_task(db, *pid).await,
             TaskCommand::Complete { tids } => complete_tasks(db, tids).await,
+            TaskCommand::Top { tid } => top_task(db, *tid).await,
             TaskCommand::Update { tid } => update_task(db, *tid).await,
         },
         Some(Commands::Today) => today(todo).await,

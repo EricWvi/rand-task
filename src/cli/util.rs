@@ -93,7 +93,7 @@ pub fn progressing_bar(min: i32, sec: i32, total: i32) -> std::io::Result<()> {
     use std::io::Write;
     use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
     let percent = (total * 60 - min * 60 - sec) * 100 / (total * 60);
-    let remainder = format!("{}m {}s", min, sec);
+    let remainder = format!("{}m {}s  ", min, sec);
     let mut color_bar = String::new();
     for c in iter::repeat('━').take((percent as f64 / 2.5) as usize) {
         color_bar.push(c);

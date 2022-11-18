@@ -41,6 +41,7 @@ pub async fn update_task(db: &DatabaseConnection, id: i32) {
         file_link,
         project_id: task.project_id,
         status,
+        seq: task.seq,
     };
     task_dao::update_task(db, &task, &task_new)
         .await

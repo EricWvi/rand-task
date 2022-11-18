@@ -12,7 +12,11 @@ impl CtrlCPage {
     pub fn new() -> CtrlCPage {
         CtrlCPage {
             title: "\nWhich action do you want?".to_string(),
-            options: vec!["Stop".to_string(), "Next task".to_string()],
+            options: vec![
+                "Stop".to_string(),
+                "Next task".to_string(),
+                "Continue".to_string(),
+            ],
         }
     }
 
@@ -24,6 +28,7 @@ impl CtrlCPage {
                 complete_task().await;
                 set_global_task(crate::PROJECT.get().unwrap()).await;
             }
+            'c' => (),
             _ => (),
         }
     }
