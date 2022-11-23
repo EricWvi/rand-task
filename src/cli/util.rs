@@ -6,9 +6,8 @@ use rtdb::{task_dao, Project};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
+use std::iter;
 use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::{fs, iter};
 
 pub fn rand_task(tasks: &Vec<Project>) -> Option<&Project> {
     let mut total = 0;
@@ -28,9 +27,7 @@ pub fn rand_task(tasks: &Vec<Project>) -> Option<&Project> {
 
 #[inline]
 pub fn get_input() -> String {
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
-    input
+    rtdb::util::get_input()
 }
 
 pub async fn set_global_task(project: &Project) {
@@ -154,20 +151,8 @@ end run"#
     }
 }
 
-fn script_file(script: &str) -> PathBuf {
-    let mut dir = std::env::temp_dir();
-    let rnd_name = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    dir.push(format!("rand-task-{rnd_name}.osas"));
-    fs::File::create(&dir).expect("failed to create temp file");
-    fs::write(&dir, script).expect("failed to write to temp file");
-    dir
-}
-
 pub fn alert(alert_type: ASCmd) -> Command {
-    let dir = script_file(alert_type.script());
+    let dir = rtdb::util::script_file(alert_type.script());
     let mut cmd = Command::new("osascript");
     cmd.arg(dir.to_str().unwrap());
     cmd.stdout(Stdio::null());
@@ -183,7 +168,7 @@ pub fn eval_choice(choices: i32, new_line: bool) -> char {
 }
 
 pub fn lock_screen() {
-    let dir = script_file(ASCmd::LockScreen.script());
+    let dir = rtdb::util::script_file(ASCmd::LockScreen.script());
     Command::new("osascript")
         .arg(dir.to_str().unwrap())
         .output()

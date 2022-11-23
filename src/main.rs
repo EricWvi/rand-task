@@ -19,31 +19,9 @@ static TASK: OnceCell<Mutex<Task>> = OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
-    let mut path = std::env::current_exe().unwrap();
-    path.pop();
-    path.push("rand-task.log");
-    let file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .append(true)
-        .open(path);
-    let file = match file {
-        Ok(file) => file,
-        Err(error) => panic!("Error: {:?}", error),
-    };
-    tracing_subscriber::fmt()
-        .with_ansi(false)
-        .with_writer(Mutex::new(file))
-        .with_timer(OffsetTime::new(
-            UtcOffset::from_hms(8, 0, 0).unwrap(),
-            format_description!(
-                "[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:3]"
-            ),
-        ))
-        .init();
-
     let db = rtdb::init().await.expect("failed to connect db");
-    let todo = record::init();
+    init_log();
+    record::init();
 
     let cli = Cli::parse();
 
@@ -57,15 +35,41 @@ async fn main() {
         Some(Commands::List { all }) => list_projects(db, *all).await,
         Some(Commands::Schedule { ids }) => schedule_project(db, ids).await,
         Some(Commands::Search { q }) => search_project(db, q).await,
-        Some(Commands::Select { id }) => select_project(db, *id, todo).await,
+        Some(Commands::Select { id }) => select_project(db, *id).await,
         Some(Commands::Task { command }) => match command {
             TaskCommand::Add { pid } => add_task(db, *pid).await,
             TaskCommand::Complete { tids } => complete_tasks(db, tids).await,
             TaskCommand::Top { tid } => top_task(db, *tid).await,
             TaskCommand::Update { tid } => update_task(db, *tid).await,
         },
-        Some(Commands::Today) => today(todo).await,
+        Some(Commands::Today) => today().await,
         Some(Commands::Update { id }) => update_project(db, *id).await,
-        None => rt(todo).await,
+        None => rt().await,
     }
+}
+
+fn init_log() {
+    let mut path = std::env::current_exe().unwrap();
+    path.pop();
+    path.push("rand-task.log");
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open(path);
+    let file = match file {
+        Ok(file) => file,
+        Err(error) => panic!("Error: {:?}", error),
+    };
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_ansi(false)
+        .with_writer(Mutex::new(file))
+        .with_timer(OffsetTime::new(
+            UtcOffset::from_hms(8, 0, 0).unwrap(),
+            format_description!(
+                "[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:3]"
+            ),
+        ))
+        .init();
 }

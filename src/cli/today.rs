@@ -1,5 +1,5 @@
-use crate::record::ToDo;
+use crate::record;
 
-pub async fn today(todo: ToDo) {
-    println!("{}", todo);
+pub async fn today() {
+    println!("{}", record::get_todo());
 }

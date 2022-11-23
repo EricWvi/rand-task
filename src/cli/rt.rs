@@ -2,12 +2,10 @@ use crate::cli::page::*;
 use crate::cli::util;
 use crate::cli::util::rand_task;
 use crate::record;
-use crate::record::ToDo;
 use rtdb::projects::ProjectType;
 
-pub async fn rt(mut todo: ToDo) {
-    let old: String = todo.clone().into();
-    let project_type = todo.next();
+pub async fn rt() {
+    let project_type = record::next_todo();
     if project_type.is_none() {
         let landing_page = LandingPage::new();
         landing_page.display();
@@ -37,6 +35,7 @@ pub async fn rt(mut todo: ToDo) {
         time_span.display();
         time_span.eval().await;
 
-        record::flush_todo(old, todo.into());
+        record::flush_todo(project_type.unwrap());
+        println!(" TODO {:?} ✅", project_type.unwrap());
     }
 }

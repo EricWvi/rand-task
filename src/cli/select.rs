@@ -1,16 +1,13 @@
 use crate::cli::page::{Page, TimeSpanPage};
 use crate::cli::util;
 use crate::record;
-use crate::record::ToDo;
 use sea_orm::DatabaseConnection;
 
-pub async fn select_project(db: &DatabaseConnection, id: i32, mut todo: ToDo) {
-    let old: String = todo.clone().into();
+pub async fn select_project(db: &DatabaseConnection, id: i32) {
     let project = match rtdb::project_dao::find_projects_by_id(db, id).await {
         Ok(project) => project,
         Err(e) => panic!("{e:?}"),
     };
-    todo.select_type(project.r#type);
     tracing::info!(?project);
     util::set_global_project(&project);
     util::set_global_task(&project).await;
@@ -19,5 +16,8 @@ pub async fn select_project(db: &DatabaseConnection, id: i32, mut todo: ToDo) {
     time_span.display();
     time_span.eval().await;
 
-    record::flush_todo(old, todo.into());
+    let has = record::flush_todo(project.r#type);
+    if has {
+        println!(" TODO {:?} ✅", project.r#type);
+    }
 }

@@ -1,4 +1,5 @@
 use crate::cli::page::complete_task::complete_task;
+use crate::cli::util;
 use crate::cli::util::set_global_task;
 use crate::Page;
 use std::process::exit;
@@ -27,6 +28,12 @@ impl CtrlCPage {
             'b' => {
                 complete_task().await;
                 set_global_task(crate::PROJECT.get().unwrap()).await;
+                let task = crate::TASK.get();
+                if task.is_some() {
+                    if let Some(link) = task.unwrap().lock().unwrap().file_link.as_ref() {
+                        util::open_link(link);
+                    }
+                }
             }
             'c' => (),
             _ => (),

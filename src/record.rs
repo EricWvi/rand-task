@@ -4,19 +4,29 @@ use std::fmt::{Display, Formatter};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::{fs, iter};
+use tokio::sync::OnceCell;
 
-pub fn init() -> ToDo {
+static TODO_PATH: OnceCell<PathBuf> = OnceCell::const_new();
+
+pub fn init() {
     let mut path = PathBuf::from(rtdb::config::project_dir());
     let date = chrono::Local::today();
     let file_name = format!("{}.md", date.year());
     path.push("review/autogen");
     path.push(file_name);
+    TODO_PATH.set(path).expect("TODO_PATH can not be set");
+}
 
+pub fn next_todo() -> Option<ProjectType> {
+    get_todo().next()
+}
+
+pub fn get_todo() -> ToDo {
     let mut file = match fs::OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
-        .open(path)
+        .open(TODO_PATH.get().unwrap())
     {
         Ok(f) => f,
         Err(e) => panic!("{e:?}"),
@@ -26,6 +36,7 @@ pub fn init() -> ToDo {
         .expect("failed to read autogen");
     let lines = content.trim_end().split("\n").collect::<Vec<_>>();
     let line = lines.last();
+    let date = chrono::Local::today();
     let title = format!("{}-{}", date.month(), date.day());
     let bit_vector = if line.is_none() || !line.unwrap().contains(title.as_str()) {
         let mut s = String::with_capacity(PROJECT_SEQ.len());
@@ -44,26 +55,29 @@ pub fn init() -> ToDo {
             .expect("autogen is corrupted")
             .into()
     };
-
     bit_vector.into()
 }
 
-pub fn flush_todo(old: String, new: String) {
-    tracing::info!("todo old:{old} new:{new}");
-
-    let mut path = PathBuf::from(rtdb::config::project_dir());
+pub fn flush_todo(project_type: ProjectType) -> bool {
+    // TODO maybe need file lock
+    let content = fs::read_to_string(TODO_PATH.get().unwrap()).expect("failed to read autogen");
+    let lines = content.trim_end().split("\n").collect::<Vec<_>>();
+    let line = lines.last();
+    let bit_vector: String = line
+        .unwrap()
+        .split(" ")
+        .skip(1)
+        .next()
+        .expect("autogen is corrupted")
+        .into();
+    let mut todo: ToDo = bit_vector.into();
+    let has = todo.select_type(project_type);
     let date = chrono::Local::today();
-    let file_name = format!("{}.md", date.year());
-    path.push("review/autogen");
-    path.push(file_name);
-
-    let content = fs::read_to_string(&path).expect("failed to read autogen");
     let today = format!("{}-{} ", date.month(), date.day());
-    let content = content.replace(
-        (today.clone() + old.as_str()).as_str(),
-        (today + new.as_str()).as_str(),
-    );
-    fs::write(&path, content).expect("failed to write to autogen");
+    let str: String = todo.into();
+    let content = content.replace(line.unwrap(), (today + str.as_str()).as_str());
+    fs::write(TODO_PATH.get().unwrap(), content).expect("failed to write to autogen");
+    has
 }
 
 const PROJECT_SEQ: [ProjectType; 20] = [
@@ -113,8 +127,9 @@ impl ToDo {
         project_type
     }
 
-    pub fn select_type(&mut self, project_type: ProjectType) {
+    pub fn select_type(&mut self, project_type: ProjectType) -> bool {
         let mut index = -1;
+        let mut has = false;
         for (i, (b, t)) in self.inner.iter().enumerate() {
             if !*b && *t == project_type {
                 index = i as i32;
@@ -123,7 +138,9 @@ impl ToDo {
         }
         if index != -1 {
             self.inner[index as usize].0 = true;
+            has = true;
         }
+        has
     }
 }
 

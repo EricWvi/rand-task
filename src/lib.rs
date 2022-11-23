@@ -1,3 +1,5 @@
+extern crate core;
+
 pub mod config;
 mod dao;
 mod entity;
@@ -8,8 +10,9 @@ pub use dao::*;
 pub use entity::*;
 pub use view::*;
 
-use sea_orm::{Database, DatabaseConnection, DbErr};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection, DbErr};
 use tokio::sync::OnceCell;
+use tracing::log;
 
 static DB: OnceCell<DatabaseConnection> = OnceCell::const_new();
 
@@ -22,7 +25,11 @@ pub fn db() -> &'static DatabaseConnection {
 pub async fn init() -> Result<&'static DatabaseConnection, DbErr> {
     config::init();
 
-    DB.set(Database::connect(config::db_url()).await?)
+    let mut opt = ConnectOptions::new(config::db_url().clone());
+    opt.sqlx_logging(false) // Disabling SQLx log
+        .sqlx_logging_level(log::LevelFilter::Info); // Setting SQLx log level
+
+    DB.set(Database::connect(opt).await?)
         .expect("db is not initialized");
     Ok(DB.get().unwrap())
 }

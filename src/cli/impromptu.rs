@@ -1,5 +1,6 @@
 use crate::cli::page::{Page, TimeSpanPage};
 use crate::cli::util;
+use crate::record::flush_todo;
 use crate::{PROJECT, TASK};
 use rtdb::projects::{ProjectStatus, ProjectType};
 use rtdb::tasks::TaskStatus;
@@ -13,11 +14,11 @@ pub async fn impromptu_project() {
         .to_string();
     println!("{name}\n");
     println!("ProjectType:  a.Today  b.Focus another thing  c.En  d.Take a break  e.Tired");
-    let choice = util::eval_choice(4, false);
+    let choice = util::eval_choice(5, false);
     let project_type = match choice as char {
         'a' => ProjectType::Today,
-        'b' => ProjectType::En,
-        'c' => ProjectType::FocusAnotherThing,
+        'b' => ProjectType::FocusAnotherThing,
+        'c' => ProjectType::En,
         'd' => ProjectType::TakeABreak,
         'e' => ProjectType::Tired,
         _ => unreachable!(),
@@ -50,4 +51,6 @@ pub async fn impromptu_project() {
     let time_span = TimeSpanPage::new();
     time_span.display();
     time_span.eval().await;
+
+    flush_todo(project_type);
 }

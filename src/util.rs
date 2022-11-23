@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::Read;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -62,7 +63,38 @@ pub fn yes_or_no() -> char {
 }
 
 fn execute_as(script: String) -> String {
+    let dir = script_file(script.as_str());
+
+    let mut child = Command::new("osascript")
+        .arg(dir.to_str().unwrap())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    match child.wait() {
+        Ok(status) => {
+            if !status.success() {
+                println!("\u{001b}[43;1m CANCEL \u{001b}[0m");
+                std::process::exit(0);
+            }
+        }
+        Err(_) => panic!("command osascript wasn't running"),
+    }
+
+    let mut stdout = child.stdout.take().unwrap();
+    let mut answer = String::new();
+    stdout
+        .read_to_string(&mut answer)
+        .expect("failed to read from child's stdout");
+    answer.trim_end().to_string()
+}
+
+pub fn script_file(script: &str) -> PathBuf {
     let mut dir = std::env::temp_dir();
+    dir.push("rt_temp");
+    if !dir.exists() {
+        fs::create_dir(&dir).expect("failed to create temp folder");
+    }
     let rnd_name = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
@@ -70,19 +102,7 @@ fn execute_as(script: String) -> String {
     dir.push(format!("rand-task-{rnd_name}.osas"));
     fs::File::create(&dir).expect("failed to create temp file");
     fs::write(&dir, script).expect("failed to write to temp file");
-
-    let mut child = Command::new("osascript")
-        .arg(dir.to_str().unwrap())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-    child.wait().expect("command osascript wasn't running");
-    let mut stdout = child.stdout.take().unwrap();
-    let mut answer = String::new();
-    stdout
-        .read_to_string(&mut answer)
-        .expect("failed to read from child's stdout");
-    answer.trim_end().to_string()
+    dir
 }
 
 pub fn get_dialog_answer(title: &str, default: &str) -> String {
