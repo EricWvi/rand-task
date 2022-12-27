@@ -39,6 +39,7 @@ pub async fn get_first_task(db: &DbConn, project_id: i32) -> Result<Option<Task>
     let task: Option<Task> = Tasks::find()
         .filter(tasks::Column::ProjectId.eq(project_id))
         .filter(tasks::Column::Status.eq(TaskStatus::Unfinished))
+        .order_by_asc(tasks::Column::Seq)
         .one(db)
         .await?;
     Ok(task)

@@ -5,18 +5,24 @@ use sea_orm::DatabaseConnection;
 use std::fs::File;
 use std::path::PathBuf;
 
-pub async fn add_project(db: &DatabaseConnection) {
-    println!("ProjectName:");
-    let name = util::get_dialog_answer("ProjectName", "")
-        .trim()
-        .to_string();
-    println!("{name}\n");
+pub async fn add_project(db: &DatabaseConnection, pname: &Option<String>) {
+    let (name, link) = if pname.is_none() {
+        println!("ProjectName:");
+        let name = util::get_dialog_answer("ProjectName", "")
+            .trim()
+            .to_string();
+        println!("{name}\n");
 
-    println!("MdLink:");
-    let link = util::get_dialog_answer("MdLink", (name.clone() + ".md").as_str())
-        .trim()
-        .to_string();
-    println!("{link}\n");
+        println!("MdLink:");
+        let link = util::get_dialog_answer("MdLink", (name.clone() + ".md").as_str())
+            .trim()
+            .to_string();
+        println!("{link}\n");
+        (name, link)
+    } else {
+        (pname.as_ref().unwrap().clone(), "null".to_string())
+    };
+
     let md_link = match link.as_str() {
         "null" => None,
         _ => Some(link),

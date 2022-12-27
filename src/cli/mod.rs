@@ -40,7 +40,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// add project to db
-    Add,
+    Add { pname: Option<String> },
     /// move projects in Inbox to other ProjectType
     Classify,
     /// change project status to `Completed`
@@ -61,7 +61,7 @@ pub enum Commands {
     /// search project info from db
     Search { q: String },
     /// select a specific project
-    Select { id: i32 },
+    Select { id: Option<i32> },
     /// task-related commands
     Task {
         #[command(subcommand)]

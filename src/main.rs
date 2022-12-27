@@ -26,7 +26,7 @@ async fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Add) => add_project(db).await,
+        Some(Commands::Add { pname }) => add_project(db, pname).await,
         Some(Commands::Classify) => classify_projects(db).await,
         Some(Commands::Complete { ids }) => complete_project(db, ids).await,
         Some(Commands::Deschedule { ids }) => deschedule_project(db, ids).await,
@@ -35,7 +35,7 @@ async fn main() {
         Some(Commands::List { all }) => list_projects(db, *all).await,
         Some(Commands::Schedule { ids }) => schedule_project(db, ids).await,
         Some(Commands::Search { q }) => search_project(db, q).await,
-        Some(Commands::Select { id }) => select_project(db, *id).await,
+        Some(Commands::Select { id }) => select_project(db, id).await,
         Some(Commands::Task { command }) => match command {
             TaskCommand::Add { pid } => add_task(db, *pid).await,
             TaskCommand::Complete { tids } => complete_tasks(db, tids).await,

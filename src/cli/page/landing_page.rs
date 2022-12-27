@@ -12,13 +12,13 @@ pub struct LandingPage {
 impl LandingPage {
     pub fn new() -> LandingPage {
         LandingPage {
-            title: "How tired are you now?".to_string(),
+            title: "Which type will you choose?".to_string(),
             options: vec![
-                "💻 I am going to work hard.".to_string(),
-                "💬 I am going to work hard.".to_string(),
-                "💪 I want to focus on another thing.".to_string(),
-                "🎧 I need to take a break.".to_string(),
-                "🪫 I am very tired.".to_string(),
+                "💻 Today".to_string(),
+                "💬 En".to_string(),
+                "💪 Focus another thing".to_string(),
+                "🎧 Take a break".to_string(),
+                "🪫 Tired".to_string(),
             ],
         }
     }

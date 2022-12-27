@@ -60,17 +60,10 @@ pub fn get_todo() -> ToDo {
 
 pub fn flush_todo(project_type: ProjectType) -> bool {
     // TODO maybe need file lock
+    let mut todo: ToDo = get_todo();
     let content = fs::read_to_string(TODO_PATH.get().unwrap()).expect("failed to read autogen");
     let lines = content.trim_end().split("\n").collect::<Vec<_>>();
     let line = lines.last();
-    let bit_vector: String = line
-        .unwrap()
-        .split(" ")
-        .skip(1)
-        .next()
-        .expect("autogen is corrupted")
-        .into();
-    let mut todo: ToDo = bit_vector.into();
     let has = todo.select_type(project_type);
     let date = chrono::Local::today();
     let today = format!("{}-{} ", date.month(), date.day());
@@ -82,7 +75,7 @@ pub fn flush_todo(project_type: ProjectType) -> bool {
 
 const PROJECT_SEQ: [ProjectType; 20] = [
     ProjectType::Today,
-    ProjectType::En,
+    ProjectType::Today,
     ProjectType::FocusAnotherThing,
     ProjectType::Today,
     ProjectType::En,
